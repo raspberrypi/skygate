@@ -11,6 +11,9 @@ class SkyGate:
 		self.CurrentParent = None
 		self.LatestLoRaSentence = None
 		self.LatestLoRaPacketHeader = None
+		self.SelectedSSDVIndex = 0
+		self.DisplayedSSDVFileName = ''
+		self.SSDVModificationDate = 0
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -63,6 +66,8 @@ class SkyGate:
 		self.textGPS = self.builder.get_object("textGPS")
 		
 		# SSDV Screen
+		self.imageSSDV = self.builder.get_object("imageSSDV")
+		self.lblSSDVInfo = self.builder.get_object("lblSSDVInfo")
 		
 		# Settings screen
 		
@@ -121,6 +126,8 @@ class SkyGate:
 		
 	def on_buttonSSDV_clicked(self, button):
 		self.SetNewWindow(self.frameSSDV)
+		self.SelectedSSDVIndex = 0
+		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
 		
 	def on_buttonSettings_clicked(self, button):
 		self.PopulateSettingsScreen()
@@ -158,6 +165,41 @@ class SkyGate:
 		self.CurrentWindow = SomeWindow
 		
 		self.CurrentWindow.reparent(self.frameMain)
+		
+	def GetSSDVFileName(self, SelectedFileIndex=0):
+		# Get list of jpg files
+		date_file_list = []
+		for file in glob.glob('images/*.jpg'):
+			stats = os.stat(file)
+			lastmod_date = time.localtime(stats[8])
+			date_file_tuple = lastmod_date, file
+			date_file_list.append(date_file_tuple)
+
+		if len(date_file_list) == 0:
+			return ''
+
+		if SelectedFileIndex < 0:
+			SelectedFileIndex = 0
+
+		if SelectedFileIndex >= len(date_file_list):
+			SelectedFileIndex = len(date_file_list)-1
+			
+		Index = len(date_file_list) - SelectedFileIndex - 1
+			
+		selection = sorted(date_file_list)[Index]
+		
+		return selection[1]
+		
+	def ShowSSDVFile(self, SelectedFileIndex, Always):
+		# 0 means latest file; 1 onwards means 1st file (oldest), etc
+		FileName = self.GetSSDVFileName(SelectedFileIndex)
+		if FileName != '':
+			ModificationDate = time.ctime(os.path.getmtime(FileName))
+			if Always or (FileName != self.DisplayedSSDVFileName) or (ModificationDate != self.SSDVModificationDate):
+				self.imageSSDV.set_from_file(FileName)
+		
+			self.DisplayedSSDVFileName = FileName
+			self.SSDVModificationDate = ModificationDate
 		
 	def LoadSettingsFromFile(self):
 		pass
@@ -260,6 +302,7 @@ class SkyGate:
 			adjustment = self.scrollLoRa.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
 			
+		# LoRa SSDV
 		if self.gateway.LatestLoRaPacketHeader != self.LatestLoRaPacketHeader:
 			# New SSDV packet
 			self.LatestLoRaPacketHeader = self.gateway.LatestLoRaPacketHeader
@@ -273,6 +316,13 @@ class SkyGate:
 			adjustment = self.scrollLoRa.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
 			
+			# SSDV Screen
+			self.lblSSDVInfo.set_text('Callsign ' + self.LatestLoRaPacketHeader['callsign'] + ', Image ' + str(self.LatestLoRaPacketHeader['imagenumber']))
+
+			
+		# Only update the image on the SSDV window if it's being displayed
+		if self.CurrentWindow == self.frameSSDV:
+			self.ShowSSDVFile(self.SelectedSSDVIndex, False)
 			
 		return True	# Run again
 
