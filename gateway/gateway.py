@@ -2,6 +2,7 @@ from cgps import *
 from lora import *
 # from rtty import *
 from habitat import *
+from ssdv import *
 from time import sleep
 
 class gateway(object):
@@ -10,14 +11,20 @@ class gateway(object):
 	Provides callbacks so that user can provide screen updates
 	"""
 	
-	def __init__(self, CarID = 'Python', CarPeriod = 30, RadioCallsign='python', LoRaChannel=1, LoRaFrequency=434.450, LoRaMode=1):
+	def __init__(self, CarID='Python', CarPeriod=30, CarEnabled=True, RadioCallsign='python', LoRaChannel=1, LoRaFrequency=434.450, LoRaMode=1, EnableLoRaUpload=True, StoreSSDVLocally=True):
 		self.RadioCallsign = RadioCallsign
+		self.EnableLoRaUpload = EnableLoRaUpload
+		self.StoreSSDVLocally = StoreSSDVLocally
 		self.LatestLoRaSentence = None
+		self.LatestLoRaPacketHeader = None
+		
+		self.ssdv = SSDV()
+		self.ssdv.StartConversions()
 		
 		self.gps = GPS()
 		self.gps.open()
 		
-		self.habitat = habitat(ChaseCarID = 'Python', ChaseCarPeriod = CarPeriod, ChaseCarEnabled = CarPeriod > 0)
+		self.habitat = habitat(ChaseCarID=CarID, ChaseCarPeriod=CarPeriod, ChaseCarEnabled=CarEnabled)
 		self.habitat.open()
 		
 		self.lora = LoRa(LoRaChannel, LoRaFrequency, LoRaMode)
@@ -34,10 +41,18 @@ class gateway(object):
 		elif self.habitat.IsSentence(packet[0]):
 			self.LatestLoRaSentence = ''.join(map(chr,bytes(packet).split(b'\x00')[0]))
 			print("Sentence=" + self.LatestLoRaSentence, end='')
-			self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
+			if self.EnableLoRaUpload:
+				self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
 		elif self.habitat.IsSSDV(packet[0]):
 			print("SSDV Packet")
-			self.habitat.UploadSSDV(self.RadioCallsign, packet)
+			packet = bytearray([0x55] + packet)
+			header = self.ssdv.extract_header(packet)
+			print("SSDV Header = ", header)
+			if self.EnableLoRaUpload:
+				self.habitat.UploadSSDV(self.RadioCallsign, packet)
+			if self.StoreSSDVLocally:
+				self.ssdv.write_packet(header['callsign'], header['imagenumber'], packet)
+			self.LatestLoRaPacketHeader = header
 		else:
 			print("Unknown packet ", packet[0])
 

@@ -10,6 +10,7 @@ class SkyGate:
 		self.CurrentWindow = None
 		self.CurrentParent = None
 		self.LatestLoRaSentence = None
+		self.LatestLoRaPacketHeader = None
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -27,6 +28,7 @@ class SkyGate:
 		self.frameRTTY = self.builder.get_object("frameRTTY")
 		self.frameGPS = self.builder.get_object("frameGPS")
 		self.frameSSDV = self.builder.get_object("frameSSDV")
+		self.frameSettings = self.builder.get_object("frameSettings")
 		
 		# Main screen widgets - upper status bar
 		self.lblLoRaPayload = self.builder.get_object("lblLoRaPayload")
@@ -68,11 +70,23 @@ class SkyGate:
 		self.windowMain.move(100,100)
 		self.windowMain.show_all()
 		
-		# Read config file
+		# Default settings
+		self.ReceiverCallsign = 'Python'
+		self.EnableLoRaUpload = True
+		self.EnableRTTYUpload = True
+		
 		self.LoRaFrequency = 434.450
 		self.LoRaMode = 1
+		
 		self.RTTYFrequency = 434.250
 		self.RTTYBaudRate = 50
+		
+		self.ChaseCarID = 'Python'
+		self.ChaseCarPeriod = 30
+		self.ChaseCarEnabled = True
+		
+		# Read config file
+		self.LoadSettingsFromFile()		
 		
 		# Show current settings
 		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
@@ -85,7 +99,7 @@ class SkyGate:
 		GObject.timeout_add_seconds(1, self.screen_updates_timer)
 
 		# Gateway
-		self.gateway = gateway()
+		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled, RadioCallsign=self.ReceiverCallsign, LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload)
 		self.gateway.run()
 
 	# Main window signals
@@ -108,6 +122,10 @@ class SkyGate:
 	def on_buttonSSDV_clicked(self, button):
 		self.SetNewWindow(self.frameSSDV)
 		
+	def on_buttonSettings_clicked(self, button):
+		self.PopulateSettingsScreen()
+		self.SetNewWindow(self.frameSettings)
+		
 	# HAB window signals
 	
 	# LoRa window signals
@@ -124,7 +142,14 @@ class SkyGate:
 		print("SSDV Next")
 	
 	# Settings window signals
+	def on_btnSettingsSave_clicked(self, button):
+		self.LoadFromSettingsScreen()
+		self.SaveSettingsToFile()
 		
+	def on_btnSettingsCancel_clicked(self, button):
+		self.PopulateSettingsScreen()
+
+	# General functions
 	def SetNewWindow(self, SomeWindow):
 		if self.CurrentWindow:
 			self.CurrentWindow.reparent(self.CurrentParent)
@@ -133,6 +158,42 @@ class SkyGate:
 		self.CurrentWindow = SomeWindow
 		
 		self.CurrentWindow.reparent(self.frameMain)
+		
+	def LoadSettingsFromFile(self):
+		pass
+		
+	def SaveSettingsToFile(self):
+		pass
+		
+	def PopulateSettingsScreen(self):
+		self.builder.get_object("textSettingsReceiverCallsign").set_text(self.ReceiverCallsign)
+		self.builder.get_object("chkEnableLoRaUpload").set_active(self.EnableLoRaUpload)
+		self.builder.get_object("chkEnableRTTYUpload").set_active(self.EnableRTTYUpload)
+		
+		self.builder.get_object("textSettingsLoRaFrequency").set_text("{0:.3f}".format(self.LoRaFrequency))
+		self.builder.get_object("cmbSettingsLoRaMode").set_active(self.LoRaMode)
+		
+		self.builder.get_object("textSettingsRTTYFrequency").set_text("{0:.3f}".format(self.RTTYFrequency))
+		self.builder.get_object("cmbSettingsRTTYBaudRate").set_active(1 if (self.RTTYBaudRate == 300) else 0)
+		
+		self.builder.get_object("textSettingsChaseCarID").set_text(self.ChaseCarID)
+		self.builder.get_object("textSettingsChaseCarPeriod").set_text(str(self.ChaseCarPeriod))
+		self.builder.get_object("chkEnableChaseCarUpload").set_active(self.ChaseCarEnabled)
+	
+	def LoadFromSettingsScreen(self):
+		self.ReceiverCallsign = self.builder.get_object("textSettingsReceiverCallsign").get_text()
+		self.EnableLoRaUpload = self.builder.get_object("chkEnableLoRaUpload").get_active()
+		self.EnableRTTYUpload = self.builder.get_object("chkEnableRTTYUpload").get_active()
+		
+		self.LoRaFrequency = float(self.builder.get_object("textSettingsLoRaFrequency").get_text())
+		self.LoRaMode = self.builder.get_object("cmbSettingsLoRaMode").get_active()
+		
+		self.RTTYFrequency = float(self.builder.get_object("textSettingsRTTYFrequency").get_text())
+		self.RTTYBaudRate = 300 if self.builder.get_object("cmbSettingsRTTYBaudRate").get_active() else 50
+		
+		self.ChaseCarID = self.builder.get_object("textSettingsChaseCarID").get_text()
+		self.ChaseCarPeriod = int(self.builder.get_object("textSettingsChaseCarPeriod").get_text())
+		self.ChaseCarEnabled = self.builder.get_object("chkEnableChaseCarUpload").get_active()
 		
 	def DecodeSentence(self, sentence):
 		# $BUZZ,483,10:04:27,51.95022,-2.54435,00190,5*6856
@@ -167,6 +228,7 @@ class SkyGate:
 			
 		# LoRa
 		if self.gateway.LatestLoRaSentence != self.LatestLoRaSentence:
+			# New sentence
 			# Top status line
 			self.LatestLoRaSentence = self.gateway.LatestLoRaSentence
 			self.LatestLoRaValues = self.DecodeSentence(self.LatestLoRaSentence)
@@ -198,6 +260,18 @@ class SkyGate:
 			adjustment = self.scrollLoRa.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
 			
+		if self.gateway.LatestLoRaPacketHeader != self.LatestLoRaPacketHeader:
+			# New SSDV packet
+			self.LatestLoRaPacketHeader = self.gateway.LatestLoRaPacketHeader
+			buffer = self.textLoRa.get_buffer()
+			if buffer.get_line_count() > 50:
+				start = buffer.get_iter_at_line(0)
+				end = buffer.get_iter_at_line(1)
+				buffer.delete(start, end)
+			buffer.insert_at_cursor(str(self.LatestLoRaPacketHeader) + '\n')
+			# scroll to bottom
+			adjustment = self.scrollLoRa.get_vadjustment()
+			adjustment.set_value(adjustment.get_upper())
 			
 			
 		return True	# Run again

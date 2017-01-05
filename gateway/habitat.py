@@ -78,10 +78,7 @@ class habitat(object):
 			pass
 			# return (False,"Failed to upload to Habitat: %s" % (str(e)))
 			
-	def UploadSSDV(self, Callsign, Packet):
-		packet = bytearray([0x55] + Packet)
-		print("len(packet)=", len(packet))
-		
+	def UploadSSDV(self, Callsign, packet):
 		encoded_packet = b64encode(packet)
 
 		date = datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ")

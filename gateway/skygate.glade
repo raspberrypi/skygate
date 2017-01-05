@@ -456,11 +456,12 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="button6">
+                  <object class="GtkButton" id="buttonSettings">
                     <property name="label" translatable="yes">Settings</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
+                    <signal name="clicked" handler="on_buttonSettings_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="left_attach">0</property>
@@ -730,6 +731,335 @@
             <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">2</property>
+          </packing>
+        </child>
+      </object>
+    </child>
+  </object>
+  <object class="GtkOffscreenWindow" id="windowSettings">
+    <property name="can_focus">False</property>
+    <child>
+      <object class="GtkBox" id="frameSettings">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkScrolledWindow" id="scrolledwindow1">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkViewport" id="viewport1">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <child>
+                  <object class="GtkGrid" id="grid7">
+                    <property name="visible">True</property>
+                    <property name="can_focus">False</property>
+                    <property name="halign">baseline</property>
+                    <property name="margin_left">5</property>
+                    <property name="margin_right">5</property>
+                    <property name="margin_top">5</property>
+                    <property name="margin_bottom">5</property>
+                    <property name="column_spacing">5</property>
+                    <property name="row_homogeneous">True</property>
+                    <property name="column_homogeneous">True</property>
+                    <child>
+                      <object class="GtkLabel" id="label5">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Receiver Callsign:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="textSettingsReceiverCallsign">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label7">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Upload LoRa To Habitat:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label8">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Upload RTTY To Habitat:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label9">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">LoRa Frequency:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label10">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">LoRa Mode:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label11">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">RTTY Frequency:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">5</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label12">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">RTTY Baud Rate:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label13">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Chase Car ID:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label15">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Chase Car Upload Period (s)</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">8</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel" id="label16">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="halign">end</property>
+                        <property name="label" translatable="yes">Chase Car Upload:</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">0</property>
+                        <property name="top_attach">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="chkEnableLoRaUpload">
+                        <property name="label" translatable="yes">Enable</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="chkEnableRTTYUpload">
+                        <property name="label" translatable="yes">Enable</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">2</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkCheckButton" id="chkEnableChaseCarUpload">
+                        <property name="label" translatable="yes">Enable</property>
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="receives_default">False</property>
+                        <property name="xalign">0</property>
+                        <property name="draw_indicator">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">9</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="textSettingsLoRaFrequency">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">3</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="textSettingsRTTYFrequency">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">5</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="textSettingsChaseCarID">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">7</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="cmbSettingsLoRaMode">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="active">1</property>
+                        <items>
+                          <item translatable="yes">0 - Slow (Telemetry Only)</item>
+                          <item translatable="yes">1 - Fast (SSDV + Telemetry)</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">4</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkComboBoxText" id="cmbSettingsRTTYBaudRate">
+                        <property name="visible">True</property>
+                        <property name="can_focus">False</property>
+                        <property name="active">1</property>
+                        <items>
+                          <item translatable="yes">50 - Telemetry Only</item>
+                          <item translatable="yes">300 - SSDV + Telemetry</item>
+                        </items>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">6</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkEntry" id="textSettingsChaseCarPeriod">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="input_purpose">digits</property>
+                      </object>
+                      <packing>
+                        <property name="left_attach">1</property>
+                        <property name="top_attach">8</property>
+                      </packing>
+                    </child>
+                  </object>
+                </child>
+              </object>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="box10">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <child>
+              <placeholder/>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnSettingsCancel">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_btnSettingsCancel_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btnSettingsSave">
+                <property name="label" translatable="yes">Save</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <signal name="clicked" handler="on_btnSettingsSave_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack_type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
         </child>
       </object>
