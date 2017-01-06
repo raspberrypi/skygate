@@ -108,6 +108,7 @@ class LoRa(Radio):
 				
 		self.Channel = Channel
 		self.Frequency = Frequency
+		self.Mode = Mode
 		self.DIO0 = InputDevice(DIO0)
 		self.DIO5 = InputDevice(DIO5)
 		self.currentMode = 0x81;
@@ -116,8 +117,8 @@ class LoRa(Radio):
 		self.spi.open(0, Channel)
 		self.spi.max_speed_hz = 976000
 		self.__writeRegister(REG_DIO_MAPPING_2, 0x00)
-		self.SetLoRaFrequency(Frequency)
-		self.SetStandardLoRaParameters(Mode)
+		self.__SetLoRaFrequency(Frequency)
+		self.__SetStandardLoRaParameters(Mode)
 
 	def __readRegister(self, register):
 		data = [register & 0x7F, 0]
@@ -151,7 +152,8 @@ class LoRa(Radio):
 				# time.sleep(0.1)
 				pass
 		
-	def SetLoRaFrequency(self, Frequency):
+	def __SetLoRaFrequency(self, Frequency):
+		self.Frequency = Frequency
 		self.__setMode(RF98_MODE_STANDBY)
 		self.__setMode(RF98_MODE_SLEEP)
 		self.__writeRegister(REG_OPMODE, 0x80);
@@ -164,6 +166,11 @@ class LoRa(Radio):
 		self.__writeRegister(0x07, (FrequencyValue >> 8) & 0xFF)
 		self.__writeRegister(0x08, FrequencyValue & 0xFF)
 
+	def SetLoRaFrequency(self, Frequency):
+		self.Frequency = Frequency
+		self.__SetLoRaFrequency(Frequency)
+		self.__startReceiving()
+	
 	def SetLoRaParameters(self, ImplicitOrExplicit, ErrorCoding, Bandwidth, SpreadingFactor, LowDataRateOptimize):
 		self.__writeRegister(REG_MODEM_CONFIG, ImplicitOrExplicit | ErrorCoding | Bandwidth)
 		self.__writeRegister(REG_MODEM_CONFIG2, SpreadingFactor | CRC_ON)
@@ -176,13 +183,18 @@ class LoRa(Radio):
 		self.__writeRegister(REG_PAYLOAD_LENGTH, self.PayloadLength)
 		self.__writeRegister(REG_RX_NB_BYTES, self.PayloadLength)
 
-	def SetStandardLoRaParameters(self, Mode):
+	def __SetStandardLoRaParameters(self, Mode):
 		if Mode == 0:
 			self.SetLoRaParameters(EXPLICIT_MODE, ERROR_CODING_4_8, BANDWIDTH_20K8, SPREADING_11, True)
 		elif Mode == 1:
 			self.SetLoRaParameters(IMPLICIT_MODE, ERROR_CODING_4_5, BANDWIDTH_20K8, SPREADING_6, False)
 		elif Mode == 2:
 			self.SetLoRaParameters(EXPLICIT_MODE, ERROR_CODING_4_8, BANDWIDTH_62K5, SPREADING_8, False)
+		
+	def SetStandardLoRaParameters(self, Mode):
+		self.Mode = Mode
+		self.__SetStandardLoRaParameters(Mode)
+		self.__startReceiving()
 		
 	def send_thread(self):
 		# wait for DIO0

@@ -4,6 +4,13 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject
 from gateway import *
+import configparser
+
+def BoolToStr(value):
+	if value:
+		return '1'
+	else:
+		return '0'
 
 class SkyGate:
 	def __init__(self):
@@ -17,7 +24,6 @@ class SkyGate:
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
-		# builder.add_from_file("HAB.glade")
 		self.builder.connect_signals(self)
 
 		self.windowMain = self.builder.get_object("windowMain")
@@ -91,7 +97,8 @@ class SkyGate:
 		self.ChaseCarEnabled = True
 		
 		# Read config file
-		self.LoadSettingsFromFile()		
+		self.ConfigFileName = 'skygate.ini'
+		self.LoadSettingsFromFile(self.ConfigFileName)
 		
 		# Show current settings
 		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
@@ -136,6 +143,17 @@ class SkyGate:
 	# HAB window signals
 	
 	# LoRa window signals
+	def on_btnLoRaDown_clicked(self, button):
+		self.LoRaFrequency = self.LoRaFrequency - 0.001
+		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
+	
+	def on_btnLoRaUp_clicked(self, button):
+		self.LoRaFrequency = self.LoRaFrequency + 0.001
+		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 	
 	# RTTY window signals
 	
@@ -143,15 +161,19 @@ class SkyGate:
 	
 	# SSDV window signals
 	def on_btnSSDVPrevious_clicked(self, button):
-		print("SSDV Previous")
+		self.SelectedSSDVIndex += 1
+		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
 	
 	def on_btnSSDVNext_clicked(self, button):
-		print("SSDV Next")
+		if self.SelectedSSDVIndex > 0:
+			self.SelectedSSDVIndex -= 1
+		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
 	
 	# Settings window signals
 	def on_btnSettingsSave_clicked(self, button):
 		self.LoadFromSettingsScreen()
-		self.SaveSettingsToFile()
+		self.ApplySettings()
+		self.SaveSettingsToFile(self.ConfigFileName)
 		
 	def on_btnSettingsCancel_clicked(self, button):
 		self.PopulateSettingsScreen()
@@ -189,6 +211,13 @@ class SkyGate:
 		selection = sorted(date_file_list)[Index]
 		
 		return selection[1]
+
+	def ExtractImageInfoFromFileName(self, FileName):
+		print(FileName)
+		temp = FileName.split('/')
+		temp = temp[1].split('.')
+		fields = temp[0].split('_')
+		return {'callsign': fields[0], 'imagenumber': fields[1]}
 		
 	def ShowSSDVFile(self, SelectedFileIndex, Always):
 		# 0 means latest file; 1 onwards means 1st file (oldest), etc
@@ -197,15 +226,67 @@ class SkyGate:
 			ModificationDate = time.ctime(os.path.getmtime(FileName))
 			if Always or (FileName != self.DisplayedSSDVFileName) or (ModificationDate != self.SSDVModificationDate):
 				self.imageSSDV.set_from_file(FileName)
+				ImageInfo = self.ExtractImageInfoFromFileName(FileName)
+				self.lblSSDVInfo.set_text('Callsign ' + ImageInfo['callsign'] + ', Image ' + ImageInfo['imagenumber'])
+
 		
 			self.DisplayedSSDVFileName = FileName
 			self.SSDVModificationDate = ModificationDate
 		
-	def LoadSettingsFromFile(self):
-		pass
+	def LoadSettingsFromFile(self, FileName):
+		if os.path.isfile(FileName):
+			# Open config file
+			config = configparser.RawConfigParser()   
+			config.read(FileName)
+								
+			self.ReceiverCallsign = config.get('Receiver', 'Callsign')
+			
+			self.LoRaFrequency = float(config.get('LoRa', 'Frequency'))
+			self.LoRaMode = int(config.get('LoRa', 'Mode'))
+			self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload')
+			
+			self.RTTYFrequency = float(config.get('RTTY', 'Frequency'))
+			self.RTTYBaudRate = int(config.get('RTTY', 'BaudRate'))
+			self.EnableRTTYUpload = config.getboolean('RTTY', 'EnableUpload')
+			
+			self.ChaseCarID = config.get('ChaseCar', 'ID')
+			self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period'))
+			self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload')
+
+	def ApplySettings(self):
+		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
+		self.gateway.lora.SetStandardLoRaParameters(self.LoRaMode)
+		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+	
+	def SaveSettingsToFile(self, FileName):
+		config = configparser.RawConfigParser()   
+		config.read(FileName)
+							
+		if not config.has_section('Receiver'):
+			config.add_section('Receiver')
+		config.set('Receiver', 'Callsign', self.ReceiverCallsign)
 		
-	def SaveSettingsToFile(self):
-		pass
+		if not config.has_section('LoRa'):
+			config.add_section('LoRa')
+		config.set('LoRa', 'Frequency', self.LoRaFrequency)
+		config.set('LoRa', 'Mode', self.LoRaMode)
+		config.set('LoRa', 'EnableUpload', BoolToStr(self.EnableLoRaUpload))
+		
+		if not config.has_section('RTTY'):
+			config.add_section('RTTY')
+		config.set('RTTY', 'Frequency', self.RTTYFrequency)
+		config.set('RTTY', 'BaudRate', self.RTTYBaudRate)
+		config.set('RTTY', 'EnableUpload', BoolToStr(self.EnableRTTYUpload))
+		
+		if not config.has_section('ChaseCar'):
+			config.add_section('ChaseCar')
+		config.set('ChaseCar', 'ID', self.ChaseCarID)
+		config.set('ChaseCar', 'Period', self.ChaseCarPeriod)
+		config.set('ChaseCar', 'EnableUpload', BoolToStr(self.ChaseCarEnabled))
+		
+		with open(FileName, 'wt') as configfile:
+			config.write(configfile)
 		
 	def PopulateSettingsScreen(self):
 		self.builder.get_object("textSettingsReceiverCallsign").set_text(self.ReceiverCallsign)
@@ -316,9 +397,6 @@ class SkyGate:
 			adjustment = self.scrollLoRa.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
 			
-			# SSDV Screen
-			self.lblSSDVInfo.set_text('Callsign ' + self.LatestLoRaPacketHeader['callsign'] + ', Image ' + str(self.LatestLoRaPacketHeader['imagenumber']))
-
 			
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.frameSSDV:

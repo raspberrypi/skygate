@@ -113,6 +113,8 @@
               <object class="GtkBox" id="box4">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <property name="homogeneous">True</property>
                 <child>
                   <object class="GtkLabel" id="lblHABLoRaFrequency">
                     <property name="visible">True</property>
@@ -125,10 +127,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkArrow" id="arrow1">
+                  <object class="GtkButton" id="btnHABLoRaUp">
+                    <property name="label" translatable="yes">Frequency Up</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="arrow_type">up</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="resize_mode">immediate</property>
+                    <signal name="clicked" handler="on_btnLoRaUp_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -137,10 +142,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkArrow" id="arrow2">
+                  <object class="GtkButton" id="btnHABLoRaDown">
+                    <property name="label" translatable="yes">Frequency Down</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="arrow_type">down</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="resize_mode">immediate</property>
+                    <signal name="clicked" handler="on_btnLoRaDown_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -190,6 +198,9 @@
                 <property name="position">1</property>
               </packing>
             </child>
+            <child>
+              <placeholder/>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -232,6 +243,8 @@
               <object class="GtkBox" id="box6">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="orientation">vertical</property>
+                <property name="homogeneous">True</property>
                 <child>
                   <object class="GtkLabel" id="lblHABRTTYFrequency">
                     <property name="visible">True</property>
@@ -244,10 +257,12 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkArrow" id="arrow3">
+                  <object class="GtkButton" id="btnRTTYUp">
+                    <property name="label" translatable="yes">Frequency Up</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="arrow_type">up</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="resize_mode">immediate</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -256,10 +271,12 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkArrow" id="arrow4">
+                  <object class="GtkButton" id="btnRTTYDown">
+                    <property name="label" translatable="yes">Frequency Down</property>
                     <property name="visible">True</property>
-                    <property name="can_focus">False</property>
-                    <property name="arrow_type">down</property>
+                    <property name="can_focus">True</property>
+                    <property name="receives_default">True</property>
+                    <property name="resize_mode">immediate</property>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -340,10 +357,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkArrow" id="arrow6">
+              <object class="GtkButton" id="btnLoRaUp">
+                <property name="label" translatable="yes">Frequency Up</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="arrow_type">up</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="halign">end</property>
+                <property name="resize_mode">immediate</property>
+                <signal name="clicked" handler="on_btnLoRaUp_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -352,10 +373,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkArrow" id="arrow7">
+              <object class="GtkButton" id="btnLoRaDown">
+                <property name="label" translatable="yes">Frequency Down</property>
                 <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="arrow_type">down</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="halign">end</property>
+                <property name="xalign">0.43000000715255737</property>
+                <signal name="clicked" handler="on_btnLoRaDown_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
