@@ -17,6 +17,7 @@ class gateway(object):
 		self.StoreSSDVLocally = StoreSSDVLocally
 		self.LatestLoRaSentence = None
 		self.LatestLoRaPacketHeader = None
+		self.LoRaFrequencyError = 0
 		
 		self.ssdv = SSDV()
 		self.ssdv.StartConversions()
@@ -35,26 +36,29 @@ class gateway(object):
 			sleep(1)
 			self.habitat.CarPosition = self.gps.Position()
 			
-	def __lora_packet(self, packet):
-		if packet == None:
+	def __lora_packet(self, result):
+		if result == None:
 			print("Failed packet")
-		elif self.habitat.IsSentence(packet[0]):
-			self.LatestLoRaSentence = ''.join(map(chr,bytes(packet).split(b'\x00')[0]))
-			print("Sentence=" + self.LatestLoRaSentence, end='')
-			if self.EnableLoRaUpload:
-				self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
-		elif self.habitat.IsSSDV(packet[0]):
-			print("SSDV Packet")
-			packet = bytearray([0x55] + packet)
-			header = self.ssdv.extract_header(packet)
-			print("SSDV Header = ", header)
-			if self.EnableLoRaUpload:
-				self.habitat.UploadSSDV(self.RadioCallsign, packet)
-			if self.StoreSSDVLocally:
-				self.ssdv.write_packet(header['callsign'], header['imagenumber'], packet)
-			self.LatestLoRaPacketHeader = header
 		else:
-			print("Unknown packet ", packet[0])
+			packet = result['packet']
+			self.LoRaFrequencyError = result['freq_error']
+			if self.habitat.IsSentence(packet[0]):
+				self.LatestLoRaSentence = ''.join(map(chr,bytes(packet).split(b'\x00')[0]))
+				print("Sentence=" + self.LatestLoRaSentence, end='')
+				if self.EnableLoRaUpload:
+					self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
+			elif self.habitat.IsSSDV(packet[0]):
+				print("SSDV Packet")
+				packet = bytearray([0x55] + packet)
+				header = self.ssdv.extract_header(packet)
+				print("SSDV Header = ", header)
+				if self.EnableLoRaUpload:
+					self.habitat.UploadSSDV(self.RadioCallsign, packet)
+				if self.StoreSSDVLocally:
+					self.ssdv.write_packet(header['callsign'], header['imagenumber'], packet)
+				self.LatestLoRaPacketHeader = header
+			else:
+				print("Unknown packet ", packet[0])
 
 	def run(self):
 		self.gps.run()

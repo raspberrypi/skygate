@@ -2,7 +2,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GObject, Pango
 from gateway import *
 import configparser
 
@@ -11,6 +11,25 @@ def BoolToStr(value):
 		return '1'
 	else:
 		return '0'
+		
+def CalculateDistance(HABLatitude, HABLongitude, CarLatitude, CarLongitude):
+	HABLatitude = HABLatitude * math.pi / 180
+	HABLongitude = HABLongitude * math.pi / 180
+	CarLatitude = CarLatitude * math.pi / 180
+	CarLongitude = CarLongitude * math.pi / 180
+
+	return 6371000 * math.acos(math.sin(CarLatitude) * math.sin(HABLatitude) + math.cos(CarLatitude) * math.cos(HABLatitude) * math.cos(HABLongitude-CarLongitude))
+
+def CalculateDirection(HABLatitude, HABLongitude, CarLatitude, CarLongitude):
+	HABLatitude = HABLatitude * math.pi / 180
+	HABLongitude = HABLongitude * math.pi / 180
+	CarLatitude = CarLatitude * math.pi / 180
+	CarLongitude = CarLongitude * math.pi / 180
+
+	y = math.sin(HABLongitude - CarLongitude) * math.cos(HABLatitude)
+	x = math.cos(CarLatitude) * math.sin(HABLatitude) - math.sin(CarLatitude) * math.cos(HABLatitude) * math.cos(HABLongitude - CarLongitude)
+
+	return math.atan2(y, x) * 180 / math.pi
 
 class SkyGate:
 	def __init__(self):
@@ -21,6 +40,7 @@ class SkyGate:
 		self.SelectedSSDVIndex = 0
 		self.DisplayedSSDVFileName = ''
 		self.SSDVModificationDate = 0
+		self.LoRaFrequencyError = 999
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -56,7 +76,8 @@ class SkyGate:
 		# HAB Screen
 		self.textHABLoRa = self.builder.get_object("textHABLoRa")
 		self.textHABRTTY = self.builder.get_object("textHABRTTY")
-		self.arrowDirection = self.builder.get_object("arrowDirection")
+		self.lblHABDirection = self.builder.get_object("lblHABDirection")
+		self.lblHABDistance = self.builder.get_object("lblHABDistance")
 		self.lblHABLoRaFrequency = self.builder.get_object("lblHABLoRaFrequency")
 		self.lblHABRTTYFrequency = self.builder.get_object("lblHABRTTYFrequency")
 		
@@ -64,6 +85,7 @@ class SkyGate:
 		self.textLoRa = self.builder.get_object("textLoRa")
 		self.scrollLoRa = self.builder.get_object("scrollLoRa")
 		self.lblLoRaFrequency = self.builder.get_object("lblLoRaFrequency")
+		self.lblLoRaFrequencyError = self.builder.get_object("lblLoRaFrequencyError")		
 		
 		# RTTY Screen
 		# self.lblRTTYFrequency = self.builder.get_object("lblRTTYFrequency")
@@ -179,6 +201,14 @@ class SkyGate:
 		self.PopulateSettingsScreen()
 
 	# General functions
+	def ShowDistanceAndDirection(self):
+		if self.LatestLoRaValues and self.gateway.gps:
+			DistanceToHAB = CalculateDistance(self.LatestLoRaValues['lat'], self.LatestLoRaValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
+			DirectionToHAB = CalculateDirection(self.LatestLoRaValues['lat'], self.LatestLoRaValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
+																			
+			self.lblHABDirection.set_markup("<span font='48'>" + ["N","NE","E","SE","S","SW","W","NW","N"][int(round(DirectionToHAB/45))] + "</span>")
+			self.lblHABDistance.set_markup("<span font='32'>" + "%.3f" % (DistanceToHAB/1000) + " km</span>")
+	
 	def SetNewWindow(self, SomeWindow):
 		if self.CurrentWindow:
 			self.CurrentWindow.reparent(self.CurrentParent)
@@ -361,7 +391,7 @@ class SkyGate:
 			self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
 			self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
 			
-			# HAB screen
+			# HAB screen updates
 			buffer = self.textHABLoRa.get_buffer()		
 			start = buffer.get_iter_at_offset(0)
 			end = buffer.get_iter_at_offset(999)
@@ -371,6 +401,7 @@ class SkyGate:
 									"{0:.5f}".format(self.LatestLoRaValues['lat']) + "\n" +
 									"{0:.5f}".format(self.LatestLoRaValues['lon']) + "\n" +
 									str(self.LatestLoRaValues['alt']) + 'm')
+			self.ShowDistanceAndDirection()
 
 			# LoRa screen
 			buffer = self.textLoRa.get_buffer()
@@ -396,6 +427,11 @@ class SkyGate:
 			# scroll to bottom
 			adjustment = self.scrollLoRa.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
+		
+		# LoRa RSSI etc
+		if self.gateway.LoRaFrequencyError != self.LoRaFrequencyError:
+			self.LoRaFrequencyError = self.gateway.LoRaFrequencyError
+			self.lblLoRaFrequencyError.set_text("Err: {0:.1f}".format(self.LoRaFrequencyError) + ' kHz')
 			
 			
 		# Only update the image on the SSDV window if it's being displayed

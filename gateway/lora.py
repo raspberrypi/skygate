@@ -93,6 +93,8 @@ class LoRa(Radio):
 		self.listening = False
 		self.CallbackWhenSent = None
 		self.CallbackWhenReceived = None
+		self.CurrentBandwidth = 20.8
+		self.FreqError = 0
 		
 		if DIO0 == 0:
 			if Channel == 1:
@@ -269,7 +271,19 @@ class LoRa(Radio):
 
 		# Setup Receive Continous Mode
 		self.__setMode(RF98_MODE_RX_CONTINUOUS)
-		
+
+	def __FrequencyError(self):
+		Temp = self.__readRegister(REG_FREQ_ERROR) & 7
+		Temp <<= 8
+		Temp += self.__readRegister(REG_FREQ_ERROR + 1)
+		Temp <<= 8
+		Temp += self.__readRegister(REG_FREQ_ERROR + 2)
+
+		if (self.__readRegister(REG_FREQ_ERROR) & 8):
+			Temp -= 524288
+
+		return -(Temp * (1 << 24) / 32000000.0) * (self.CurrentBandwidth / 500.0)
+
 	def __receiveMessage(self):
 		Packet = None
 
@@ -290,7 +304,7 @@ class LoRa(Radio):
 			currentAddr = self.__readRegister(REG_FIFO_RX_CURRENT_ADDR)
 			Bytes = self.__readRegister(REG_RX_NB_BYTES)
 
-			# FreqError = FrequencyError() / 1000
+			self.FreqError = self.__FrequencyError() / 1000
 
 			self.__writeRegister(REG_FIFO_ADDR_PTR, currentAddr)
 
@@ -317,7 +331,7 @@ class LoRa(Radio):
 		# Clear all flags
 		self.__writeRegister(REG_IRQ_FLAGS, 0xFF)
 
-		return Packet
+		return {'packet': Packet, 'freq_error': self.FreqError}
 		
 	def listen_thread(self):
 		while self.listening:
