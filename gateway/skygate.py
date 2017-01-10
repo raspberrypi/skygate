@@ -37,6 +37,10 @@ class SkyGate:
 		self.CurrentParent = None
 		self.LatestLoRaSentence = None
 		self.LatestLoRaPacketHeader = None
+		self.LatestLoRaValues = None
+		self.LatestRTTYSentence = None
+		self.LatestRTTYValues = None
+		self.LatestHABValues = None
 		self.SelectedSSDVIndex = 0
 		self.DisplayedSSDVFileName = ''
 		self.SSDVModificationDate = 0
@@ -88,7 +92,9 @@ class SkyGate:
 		self.lblLoRaFrequencyError = self.builder.get_object("lblLoRaFrequencyError")		
 		
 		# RTTY Screen
-		# self.lblRTTYFrequency = self.builder.get_object("lblRTTYFrequency")
+		self.textRTTY = self.builder.get_object("textRTTY")
+		self.scrollRTTY = self.builder.get_object("scrollRTTY")
+		self.lblLoRaFrequency = self.builder.get_object("lblRTTYFrequency")
 		
 		# GPS Screen
 		self.textGPS = self.builder.get_object("textGPS")
@@ -202,9 +208,9 @@ class SkyGate:
 
 	# General functions
 	def ShowDistanceAndDirection(self):
-		if self.LatestLoRaValues and self.gateway.gps:
-			DistanceToHAB = CalculateDistance(self.LatestLoRaValues['lat'], self.LatestLoRaValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
-			DirectionToHAB = CalculateDirection(self.LatestLoRaValues['lat'], self.LatestLoRaValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
+		if self.LatestHABValues and self.gateway.gps:
+			DistanceToHAB = CalculateDistance(self.LatestHABValues['lat'], self.LatestHABValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
+			DirectionToHAB = CalculateDirection(self.LatestHABValues['lat'], self.LatestHABValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
 																			
 			self.lblHABDirection.set_markup("<span font='48'>" + ["N","NE","E","SE","S","SW","W","NW","N"][int(round(DirectionToHAB/45))] + "</span>")
 			self.lblHABDistance.set_markup("<span font='32'>" + "%.3f" % (DistanceToHAB/1000) + " km</span>")
@@ -385,6 +391,7 @@ class SkyGate:
 			# Top status line
 			self.LatestLoRaSentence = self.gateway.LatestLoRaSentence
 			self.LatestLoRaValues = self.DecodeSentence(self.LatestLoRaSentence)
+			self.LatestHABValues = self.LatestLoRaValues
 			self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
 			self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
 			self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
@@ -433,6 +440,42 @@ class SkyGate:
 			self.LoRaFrequencyError = self.gateway.LoRaFrequencyError
 			self.lblLoRaFrequencyError.set_text("Err: {0:.1f}".format(self.LoRaFrequencyError) + ' kHz')
 			
+
+		# RTTY
+		if self.gateway.LatestRTTYSentence != self.LatestRTTYSentence:
+			# New sentence
+			# Top status line
+			self.LatestRTTYSentence = self.gateway.LatestRTTYSentence
+			self.LatestRTTYValues = self.DecodeSentence(self.LatestRTTYSentence)
+			self.LatestHABValues = self.LatestRTTYValues
+			self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
+			self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
+			self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
+			self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
+			self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
+			
+			# HAB screen updates
+			buffer = self.textHABRTTY.get_buffer()		
+			start = buffer.get_iter_at_offset(0)
+			end = buffer.get_iter_at_offset(999)
+			buffer.delete(start, end)
+			buffer.insert_at_cursor(self.LatestRTTYValues['payload'] + "\n" +
+									self.LatestRTTYValues['time'] + "\n" +
+									"{0:.5f}".format(self.LatestRTTYValues['lat']) + "\n" +
+									"{0:.5f}".format(self.LatestRTTYValues['lon']) + "\n" +
+									str(self.LatestRTTYValues['alt']) + 'm')
+			self.ShowDistanceAndDirection()
+
+			# RTTY screen
+			buffer = self.textRTTY.get_buffer()
+			if buffer.get_line_count() > 50:
+				start = buffer.get_iter_at_line(0)
+				end = buffer.get_iter_at_line(1)
+				buffer.delete(start, end)
+			buffer.insert_at_cursor(str(self.LatestRTTYSentence))
+			# scroll to bottom
+			adjustment = self.scrollRTTY.get_vadjustment()
+			adjustment.set_value(adjustment.get_upper())
 			
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.frameSSDV:

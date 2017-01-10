@@ -1,6 +1,6 @@
 from cgps import *
 from lora import *
-# from rtty import *
+from rtty import *
 from habitat import *
 from ssdv import *
 from time import sleep
@@ -18,6 +18,7 @@ class gateway(object):
 		self.LatestLoRaSentence = None
 		self.LatestLoRaPacketHeader = None
 		self.LoRaFrequencyError = 0
+		self.LatestRTTYSentence = None
 		
 		self.ssdv = SSDV()
 		self.ssdv.StartConversions()
@@ -29,7 +30,10 @@ class gateway(object):
 		self.habitat.open()
 		
 		self.lora = LoRa(LoRaChannel, LoRaFrequency, LoRaMode)
-		self.lora.listen_for_packets(self.__lora_packet)		
+		self.lora.listen_for_packets(self.__lora_packet)
+	
+		self.rtty = RTTY()
+		self.rtty.listen_for_sentences(self.__rtty_sentence)
 	
 	def __chase_thread(self):
 		while 1:
@@ -37,21 +41,20 @@ class gateway(object):
 			self.habitat.CarPosition = self.gps.Position()
 			
 	def __lora_packet(self, result):
-		if result == None:
+		packet = result['packet']
+		if packet == None:
 			print("Failed packet")
 		else:
-			packet = result['packet']
 			self.LoRaFrequencyError = result['freq_error']
 			if self.habitat.IsSentence(packet[0]):
 				self.LatestLoRaSentence = ''.join(map(chr,bytes(packet).split(b'\x00')[0]))
-				print("Sentence=" + self.LatestLoRaSentence, end='')
+				print("LoRa Sentence=" + self.LatestLoRaSentence, end='')
 				if self.EnableLoRaUpload:
 					self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
 			elif self.habitat.IsSSDV(packet[0]):
-				print("SSDV Packet")
 				packet = bytearray([0x55] + packet)
 				header = self.ssdv.extract_header(packet)
-				print("SSDV Header = ", header)
+				print("LoRa SSDV Header = ", header)
 				if self.EnableLoRaUpload:
 					self.habitat.UploadSSDV(self.RadioCallsign, packet)
 				if self.StoreSSDVLocally:
@@ -59,6 +62,10 @@ class gateway(object):
 				self.LatestLoRaPacketHeader = header
 			else:
 				print("Unknown packet ", packet[0])
+
+	def __rtty_sentence(self, sentence):
+		self.LatestRTTYSentence = sentence
+		print("RTTY Sentence=" + sentence, end='')
 
 	def run(self):
 		self.gps.run()
