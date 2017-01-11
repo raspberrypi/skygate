@@ -40,7 +40,7 @@ class RTTY(Radio):
 					self.CallbackWhenReceived(line)
 
 	def Processdlfldigi(self, s):
-		line = ''
+		self.CurrentRTTY = ''
 		while 1:
 			reply = s.recv(1)
 			if reply:
@@ -48,16 +48,16 @@ class RTTY(Radio):
 				if value == 9:
 					pass
 				elif value == 10:
-					if line != '':
-						line = line + temp
-						self.ProcessdlfldigiLine(line)
-						line = ''
+					if self.CurrentRTTY != '':
+						self.CurrentRTTY = self.CurrentRTTY + temp
+						self.ProcessdlfldigiLine(self.CurrentRTTY)
+						self.CurrentRTTY = ''
 				elif (value >= 32) and (value < 128):
 					temp = chr(reply[0])
 					if temp == '$':
-						line = temp
-					elif line != '':
-						line = line + temp
+						self.CurrentRTTY = temp
+					elif self.CurrentRTTY != '':
+						self.CurrentRTTY = self.CurrentRTTY + temp
 			else:
 				time.sleep(1)
 					

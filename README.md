@@ -23,6 +23,10 @@ This part of the software is Python 3.4.  It uses these Python libraries which c
 
 (need to check my notes to see if any need to be installed or if they were already installed)
 
+It needs these install items:
+
+sudo apt-get install wmctrl
+
 
 It also requires SSDV to be installed:
 
@@ -32,6 +36,29 @@ cd ssdv
 sudo make install
 
  
+Decoding RTTY
+=============
+
+RTTY is decoded external using dl-fldigi.  Installation instructions are here:
+
+https://ukhas.org.uk/projects:dl-fldigi:build-raspbian
+
+RTL SDR
+=======
+
+Assuming use of an RTL_FM radio receiver, the RTL SDR software needs to be installed:
+
+sudo apt-get install cmake build-essential python-pip libusb-1.0-0-dev python-numpy git pandoc
+cd ~
+git clone git://git.osmocom.org/rtl-sdr.git
+cd rtl-sdr
+mkdir build
+cd build
+cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
+make
+sudo make install
+sudo ldconfig
+
 
 Raspbian Configuration
 ======================

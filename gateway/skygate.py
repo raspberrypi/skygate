@@ -30,6 +30,12 @@ def CalculateDirection(HABLatitude, HABLongitude, CarLatitude, CarLongitude):
 	x = math.cos(CarLatitude) * math.sin(HABLatitude) - math.sin(CarLatitude) * math.cos(HABLatitude) * math.cos(HABLongitude - CarLongitude)
 
 	return math.atan2(y, x) * 180 / math.pi
+	
+def PositionDlFldigi(window):
+	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(window.get_position()[0]+6) + ',' + str(window.get_position()[1]+250) + ',700,173')
+
+def ShowDlFldigi(Show):
+	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
 
 class SkyGate:
 	def __init__(self):
@@ -53,7 +59,6 @@ class SkyGate:
 		self.windowMain = self.builder.get_object("windowMain")
 		self.frameMain = self.builder.get_object("frameMain")
 		self.frameDefault = self.builder.get_object("frameDefault")
-		self.SetNewWindow(self.frameDefault)
 
 		# Selectable screens
 		self.frameHAB = self.builder.get_object("frameHAB")
@@ -62,6 +67,9 @@ class SkyGate:
 		self.frameGPS = self.builder.get_object("frameGPS")
 		self.frameSSDV = self.builder.get_object("frameSSDV")
 		self.frameSettings = self.builder.get_object("frameSettings")
+
+		# Show default window
+		self.SetNewWindow(self.frameDefault)
 		
 		# Main screen widgets - upper status bar
 		self.lblLoRaPayload = self.builder.get_object("lblLoRaPayload")
@@ -93,6 +101,7 @@ class SkyGate:
 		
 		# RTTY Screen
 		self.textRTTY = self.builder.get_object("textRTTY")
+		self.lblCurrentRTTY = self.builder.get_object("lblCurrentRTTY")
 		self.scrollRTTY = self.builder.get_object("scrollRTTY")
 		self.lblLoRaFrequency = self.builder.get_object("lblRTTYFrequency")
 		
@@ -108,6 +117,8 @@ class SkyGate:
 		self.windowMain.resize(800,480)
 		self.windowMain.move(100,100)
 		self.windowMain.show_all()
+		
+		PositionDlFldigi(self.windowMain)
 		
 		# Default settings
 		self.ReceiverCallsign = 'Python'
@@ -144,7 +155,11 @@ class SkyGate:
 
 	# Main window signals
 	def onDeleteWindow(self, *args):
+		ShowDlFldigi(False)
 		Gtk.main_quit(*args)
+		
+	def on_windowMain_check_resize(self, window):
+		PositionDlFldigi(window)
 
 	# Main window button signals
 	def on_buttonHAB_clicked(self, button):
@@ -223,6 +238,9 @@ class SkyGate:
 		self.CurrentWindow = SomeWindow
 		
 		self.CurrentWindow.reparent(self.frameMain)
+		
+		ShowDlFldigi(SomeWindow == self.frameRTTY)
+
 		
 	def GetSSDVFileName(self, SelectedFileIndex=0):
 		# Get list of jpg files
@@ -441,6 +459,8 @@ class SkyGate:
 			self.lblLoRaFrequencyError.set_text("Err: {0:.1f}".format(self.LoRaFrequencyError) + ' kHz')
 			
 
+		self.lblCurrentRTTY.set_text(self.gateway.rtty.CurrentRTTY)
+		
 		# RTTY
 		if self.gateway.LatestRTTYSentence != self.LatestRTTYSentence:
 			# New sentence
@@ -472,7 +492,7 @@ class SkyGate:
 				start = buffer.get_iter_at_line(0)
 				end = buffer.get_iter_at_line(1)
 				buffer.delete(start, end)
-			buffer.insert_at_cursor(str(self.LatestRTTYSentence))
+			buffer.insert_at_cursor(str(self.LatestRTTYSentence + '\n'))
 			# scroll to bottom
 			adjustment = self.scrollRTTY.get_vadjustment()
 			adjustment.set_value(adjustment.get_upper())
