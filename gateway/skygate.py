@@ -104,6 +104,24 @@ class SkyGate:
 		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled, RadioCallsign=self.ReceiverCallsign, LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload, RTTYFrequency=self.RTTYFrequency)
 		self.gateway.run()
 
+	def AdjustLoRaFrequency(self, Delta):
+		# Adjust and set frequency
+		self.LoRaFrequency = self.LoRaFrequency + Delta
+		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
+		
+		# Update screens
+		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
+		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
+
+	def AdjustRTTYFrequency(self, Delta):
+		# Adjust and set frequency
+		self.RTTYFrequency = self.RTTYFrequency + Delta
+		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+		
+		# Update screens
+		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
+		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
+		
 	# Main window signals
 	def onDeleteWindow(self, *args):
 		ShowDlFldigi(False)
@@ -136,29 +154,17 @@ class SkyGate:
 		
 	# LoRa window signals
 	def on_btnLoRaDown_clicked(self, button):
-		self.LoRaFrequency = self.LoRaFrequency - 0.001
-		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
-		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
-		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
+		self.AdjustLoRaFrequency(-0.001)
 	
 	def on_btnLoRaUp_clicked(self, button):
-		self.LoRaFrequency = self.LoRaFrequency + 0.001
-		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
-		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
-		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
+		self.AdjustLoRaFrequency(0.001)
 	
 	# RTTY window signals
 	def on_btnRTTYDown_clicked(self, button):
-		self.RTTYFrequency = self.RTTYFrequency - 0.0005
-		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
-		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
-		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+		self.AdjustRTTYFrequency(-0.0005)
 
 	def on_btnRTTYUp_clicked(self, button):
-		self.RTTYFrequency = self.RTTYFrequency + 0.0005
-		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
-		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
-		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+		self.AdjustRTTYFrequency(0.0005)
 		
 	# GPS window signals
 	
@@ -214,8 +220,8 @@ class SkyGate:
 		# LoRa
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 		self.gateway.lora.SetStandardLoRaParameters(self.LoRaMode)
-		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
-		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
+		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.gateway.EnableLoRaUpload = self.EnableLoRaUpload
 		
 		# RTTY

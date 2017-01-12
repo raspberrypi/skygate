@@ -102,6 +102,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="editable">False</property>
+                <property name="justification">center</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -235,6 +236,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="editable">False</property>
+                <property name="justification">center</property>
               </object>
               <packing>
                 <property name="expand">True</property>

@@ -2,7 +2,7 @@ import gi
 from misc import *
 #import misc
 # gi.require_version('Gtk', '3.0')
-#from gi.repository import Gtk, GObject, Pango, GdkPixbuf
+# from gi.repository import Gtk, GObject, Pango, GdkPixbuf
 #from gateway import *
 
 
@@ -16,7 +16,7 @@ class HABScreen(object):
 		self.lblHABDistance = builder.get_object("lblHABDistance")
 		self.lblHABLoRaFrequency = builder.get_object("lblHABLoRaFrequency")
 		self.lblHABRTTYFrequency = builder.get_object("lblHABRTTYFrequency")		
-	
+			
 	def ShowLoRaFrequencyAndMode(self, LoRaFrequency, LoRaMode):
 		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(LoRaFrequency) + ' MHz, Mode ' + str(LoRaMode))
 	
@@ -37,6 +37,7 @@ class HABScreen(object):
 	def ShowHABValues(self, TextBox, LatestHABValues, GPSPosition):
 		if LatestHABValues:
 			PlaceTextInTextBox(TextBox,
+									"\n" +
 									LatestHABValues['payload'] + "\n" +
 									LatestHABValues['time'] + "\n" +
 									"{0:.5f}".format(LatestHABValues['lat']) + "\n" +
