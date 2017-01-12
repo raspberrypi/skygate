@@ -11,7 +11,7 @@ class gateway(object):
 	Provides callbacks so that user can provide screen updates
 	"""
 	
-	def __init__(self, CarID='Python', CarPeriod=30, CarEnabled=True, RadioCallsign='python', LoRaChannel=1, LoRaFrequency=434.450, LoRaMode=1, EnableLoRaUpload=True, StoreSSDVLocally=True):
+	def __init__(self, CarID='Python', CarPeriod=30, CarEnabled=True, RadioCallsign='python', LoRaChannel=1, LoRaFrequency=434.450, LoRaMode=1, EnableLoRaUpload=True, StoreSSDVLocally=True, RTTYFrequency=434.250):
 		self.RadioCallsign = RadioCallsign
 		self.EnableLoRaUpload = EnableLoRaUpload
 		self.StoreSSDVLocally = StoreSSDVLocally
@@ -32,7 +32,7 @@ class gateway(object):
 		self.lora = LoRa(LoRaChannel, LoRaFrequency, LoRaMode)
 		self.lora.listen_for_packets(self.__lora_packet)
 	
-		self.rtty = RTTY()
+		self.rtty = RTTY(Frequency=RTTYFrequency)
 		self.rtty.listen_for_sentences(self.__rtty_sentence)
 	
 	def __chase_thread(self):

@@ -260,12 +260,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnRTTYUp">
+                  <object class="GtkButton" id="btnHABRTTYUp">
                     <property name="label" translatable="yes">Frequency Up</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="resize_mode">immediate</property>
+                    <signal name="clicked" handler="on_btnRTTYUp_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -274,12 +275,13 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="btnRTTYDown">
+                  <object class="GtkButton" id="btnHABRTTYDown">
                     <property name="label" translatable="yes">Frequency Down</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
                     <property name="resize_mode">immediate</property>
+                    <signal name="clicked" handler="on_btnRTTYDown_clicked" swapped="no"/>
                   </object>
                   <packing>
                     <property name="expand">False</property>
@@ -794,6 +796,7 @@
                 <property name="receives_default">True</property>
                 <property name="halign">end</property>
                 <property name="resize_mode">immediate</property>
+                <signal name="clicked" handler="on_btnRTTYUp_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -802,13 +805,14 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="btRTTYDown">
+              <object class="GtkButton" id="btnRTTYDown">
                 <property name="label" translatable="yes">Frequency Down</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="halign">end</property>
                 <property name="xalign">0.43000000715255737</property>
+                <signal name="clicked" handler="on_btnRTTYDown_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">False</property>
@@ -847,7 +851,7 @@
           </packing>
         </child>
         <child>
-          <object class="GtkBox" id="box7">
+          <object class="GtkBox" id="boxSSDV">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="orientation">vertical</property>

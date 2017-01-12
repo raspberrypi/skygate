@@ -19,8 +19,17 @@ class RTTY(Radio):
 		# Send to dl-fldigi ?
 		
 	def SetFrequency(self, Frequency):
+		print("RTTY Frequency = ", Frequency)
 		self.Frequency = Frequency
-		# Send to rtl_fm
+		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+		s.connect(("localhost", 6020))
+		buf = b'\x00'
+		data = int(Frequency * 1000000)
+		for i in range(4):
+			buf = buf + bytes([data & 0xff])
+			data = data >> 8
+		s.send(buf)
+		s.close()
 
 	def ChecksumOK(self, Line):
 		return True
@@ -62,7 +71,7 @@ class RTTY(Radio):
 				time.sleep(1)
 					
 	def dodlfldigi(self, host, port):
-		# try:
+		try:
 			s = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 
 			s.connect((host, port))    
@@ -73,10 +82,9 @@ class RTTY(Radio):
 			self.Processdlfldigi(s)
 
 			s.close()
-		# except:
-			# print("Failed to connect to dl-fldigi")
+		except:
+			print("Failed to connect to dl-fldigi")
 			# Sources[2]['connected'] = 0
-			# pass
 	
 	def listen_thread(self):
 		host = "localhost"

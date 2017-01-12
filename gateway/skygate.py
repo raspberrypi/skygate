@@ -2,7 +2,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GObject, Pango
+from gi.repository import Gtk, GObject, Pango, GdkPixbuf
 from gateway import *
 import configparser
 
@@ -103,13 +103,14 @@ class SkyGate:
 		self.textRTTY = self.builder.get_object("textRTTY")
 		self.lblCurrentRTTY = self.builder.get_object("lblCurrentRTTY")
 		self.scrollRTTY = self.builder.get_object("scrollRTTY")
-		self.lblLoRaFrequency = self.builder.get_object("lblRTTYFrequency")
+		self.lblRTTYFrequency = self.builder.get_object("lblRTTYFrequency")
 		
 		# GPS Screen
 		self.textGPS = self.builder.get_object("textGPS")
 		
 		# SSDV Screen
 		self.imageSSDV = self.builder.get_object("imageSSDV")
+		self.boxSSDV = self.builder.get_object("boxSSDV")
 		self.lblSSDVInfo = self.builder.get_object("lblSSDVInfo")
 		
 		# Settings screen
@@ -123,13 +124,11 @@ class SkyGate:
 		# Default settings
 		self.ReceiverCallsign = 'Python'
 		self.EnableLoRaUpload = True
-		self.EnableRTTYUpload = True
 		
 		self.LoRaFrequency = 434.450
 		self.LoRaMode = 1
 		
 		self.RTTYFrequency = 434.250
-		self.RTTYBaudRate = 50
 		
 		self.ChaseCarID = 'Python'
 		self.ChaseCarPeriod = 30
@@ -141,16 +140,16 @@ class SkyGate:
 		
 		# Show current settings
 		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
-		self.lblHABRTTYFrequency.set_text("{0:.3f}".format(self.RTTYFrequency) + ' MHz, ' + str(self.RTTYBaudRate) + ' baud')
+		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
 
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
 
-		# self.lblRTTYFrequency.set_text("{0:.3f}".format(self.RTTYFrequency) + ' MHz, ' + str(self.RTTYBaudRate) + ' baud')
+		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
 		
 		GObject.timeout_add_seconds(1, self.screen_updates_timer)
 
 		# Gateway
-		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled, RadioCallsign=self.ReceiverCallsign, LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload)
+		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled, RadioCallsign=self.ReceiverCallsign, LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload, RTTYFrequency=self.RTTYFrequency)
 		self.gateway.run()
 
 	# Main window signals
@@ -199,7 +198,18 @@ class SkyGate:
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 	
 	# RTTY window signals
-	
+	def on_btnRTTYDown_clicked(self, button):
+		self.RTTYFrequency = self.RTTYFrequency - 0.0005
+		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+
+	def on_btnRTTYUp_clicked(self, button):
+		self.RTTYFrequency = self.RTTYFrequency + 0.0005
+		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+		
 	# GPS window signals
 	
 	# SSDV window signals
@@ -279,7 +289,11 @@ class SkyGate:
 		if FileName != '':
 			ModificationDate = time.ctime(os.path.getmtime(FileName))
 			if Always or (FileName != self.DisplayedSSDVFileName) or (ModificationDate != self.SSDVModificationDate):
-				self.imageSSDV.set_from_file(FileName)
+				# self.imageSSDV.set_from_file(FileName)
+				pixbuf = GdkPixbuf.Pixbuf.new_from_file(FileName)
+				pixbuf = pixbuf.scale_simple(552, 414, GdkPixbuf.InterpType.BILINEAR)
+				self.imageSSDV.set_from_pixbuf(pixbuf)
+
 				ImageInfo = self.ExtractImageInfoFromFileName(FileName)
 				self.lblSSDVInfo.set_text('Callsign ' + ImageInfo['callsign'] + ', Image ' + ImageInfo['imagenumber'])
 
@@ -300,18 +314,26 @@ class SkyGate:
 			self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload')
 			
 			self.RTTYFrequency = float(config.get('RTTY', 'Frequency'))
-			self.RTTYBaudRate = int(config.get('RTTY', 'BaudRate'))
-			self.EnableRTTYUpload = config.getboolean('RTTY', 'EnableUpload')
 			
 			self.ChaseCarID = config.get('ChaseCar', 'ID')
 			self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period'))
 			self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload')
 
 	def ApplySettings(self):
+		# LoRa
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 		self.gateway.lora.SetStandardLoRaParameters(self.LoRaMode)
 		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.gateway.EnableLoRaUpload = self.EnableLoRaUpload
+		
+		# RTTY
+		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
+		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		
+		# Car
+		self.gateway.habitat.ChaseCarEnabled = self.ChaseCarEnabled
 	
 	def SaveSettingsToFile(self, FileName):
 		config = configparser.RawConfigParser()   
@@ -330,8 +352,6 @@ class SkyGate:
 		if not config.has_section('RTTY'):
 			config.add_section('RTTY')
 		config.set('RTTY', 'Frequency', self.RTTYFrequency)
-		config.set('RTTY', 'BaudRate', self.RTTYBaudRate)
-		config.set('RTTY', 'EnableUpload', BoolToStr(self.EnableRTTYUpload))
 		
 		if not config.has_section('ChaseCar'):
 			config.add_section('ChaseCar')
@@ -345,13 +365,11 @@ class SkyGate:
 	def PopulateSettingsScreen(self):
 		self.builder.get_object("textSettingsReceiverCallsign").set_text(self.ReceiverCallsign)
 		self.builder.get_object("chkEnableLoRaUpload").set_active(self.EnableLoRaUpload)
-		self.builder.get_object("chkEnableRTTYUpload").set_active(self.EnableRTTYUpload)
 		
 		self.builder.get_object("textSettingsLoRaFrequency").set_text("{0:.3f}".format(self.LoRaFrequency))
 		self.builder.get_object("cmbSettingsLoRaMode").set_active(self.LoRaMode)
 		
-		self.builder.get_object("textSettingsRTTYFrequency").set_text("{0:.3f}".format(self.RTTYFrequency))
-		self.builder.get_object("cmbSettingsRTTYBaudRate").set_active(1 if (self.RTTYBaudRate == 300) else 0)
+		self.builder.get_object("textSettingsRTTYFrequency").set_text("{0:.4f}".format(self.RTTYFrequency))
 		
 		self.builder.get_object("textSettingsChaseCarID").set_text(self.ChaseCarID)
 		self.builder.get_object("textSettingsChaseCarPeriod").set_text(str(self.ChaseCarPeriod))
@@ -360,13 +378,11 @@ class SkyGate:
 	def LoadFromSettingsScreen(self):
 		self.ReceiverCallsign = self.builder.get_object("textSettingsReceiverCallsign").get_text()
 		self.EnableLoRaUpload = self.builder.get_object("chkEnableLoRaUpload").get_active()
-		self.EnableRTTYUpload = self.builder.get_object("chkEnableRTTYUpload").get_active()
 		
 		self.LoRaFrequency = float(self.builder.get_object("textSettingsLoRaFrequency").get_text())
 		self.LoRaMode = self.builder.get_object("cmbSettingsLoRaMode").get_active()
 		
 		self.RTTYFrequency = float(self.builder.get_object("textSettingsRTTYFrequency").get_text())
-		self.RTTYBaudRate = 300 if self.builder.get_object("cmbSettingsRTTYBaudRate").get_active() else 50
 		
 		self.ChaseCarID = self.builder.get_object("textSettingsChaseCarID").get_text()
 		self.ChaseCarPeriod = int(self.builder.get_object("textSettingsChaseCarPeriod").get_text())
@@ -374,12 +390,15 @@ class SkyGate:
 		
 	def DecodeSentence(self, sentence):
 		# $BUZZ,483,10:04:27,51.95022,-2.54435,00190,5*6856
-		list = sentence.split(",")
-		
-		payload = list[0].split("$")
-		payload = payload[len(payload)-1]
+		try:
+			list = sentence.split(",")
+			
+			payload = list[0].split("$")
+			payload = payload[len(payload)-1]
 
-		return {'payload': payload, 'time': list[2], 'lat': float(list[3]), 'lon': float(list[4]), 'alt': float(list[5])}
+			return {'payload': payload, 'time': list[2], 'lat': float(list[3]), 'lon': float(list[4]), 'alt': float(list[5])}
+		except:
+			return None
 		
 	def screen_updates_timer(self, *args):
 		# Local GPS
@@ -409,12 +428,13 @@ class SkyGate:
 			# Top status line
 			self.LatestLoRaSentence = self.gateway.LatestLoRaSentence
 			self.LatestLoRaValues = self.DecodeSentence(self.LatestLoRaSentence)
-			self.LatestHABValues = self.LatestLoRaValues
-			self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
-			self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
-			self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
-			self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
-			self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
+			if self.LatestLoRaValues:
+				self.LatestHABValues = self.LatestLoRaValues
+				self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
+				self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
+				self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
+				self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
+				self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
 			
 			# HAB screen updates
 			buffer = self.textHABLoRa.get_buffer()		
@@ -467,35 +487,36 @@ class SkyGate:
 			# Top status line
 			self.LatestRTTYSentence = self.gateway.LatestRTTYSentence
 			self.LatestRTTYValues = self.DecodeSentence(self.LatestRTTYSentence)
-			self.LatestHABValues = self.LatestRTTYValues
-			self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
-			self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
-			self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
-			self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
-			self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
+			if self.LatestRTTYValues:
+				self.LatestHABValues = self.LatestRTTYValues
+				self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
+				self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
+				self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
+				self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
+				self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
 			
-			# HAB screen updates
-			buffer = self.textHABRTTY.get_buffer()		
-			start = buffer.get_iter_at_offset(0)
-			end = buffer.get_iter_at_offset(999)
-			buffer.delete(start, end)
-			buffer.insert_at_cursor(self.LatestRTTYValues['payload'] + "\n" +
-									self.LatestRTTYValues['time'] + "\n" +
-									"{0:.5f}".format(self.LatestRTTYValues['lat']) + "\n" +
-									"{0:.5f}".format(self.LatestRTTYValues['lon']) + "\n" +
-									str(self.LatestRTTYValues['alt']) + 'm')
-			self.ShowDistanceAndDirection()
-
-			# RTTY screen
-			buffer = self.textRTTY.get_buffer()
-			if buffer.get_line_count() > 50:
-				start = buffer.get_iter_at_line(0)
-				end = buffer.get_iter_at_line(1)
+				# HAB screen updates
+				buffer = self.textHABRTTY.get_buffer()		
+				start = buffer.get_iter_at_offset(0)
+				end = buffer.get_iter_at_offset(999)
 				buffer.delete(start, end)
-			buffer.insert_at_cursor(str(self.LatestRTTYSentence + '\n'))
-			# scroll to bottom
-			adjustment = self.scrollRTTY.get_vadjustment()
-			adjustment.set_value(adjustment.get_upper())
+				buffer.insert_at_cursor(self.LatestRTTYValues['payload'] + "\n" +
+										self.LatestRTTYValues['time'] + "\n" +
+										"{0:.5f}".format(self.LatestRTTYValues['lat']) + "\n" +
+										"{0:.5f}".format(self.LatestRTTYValues['lon']) + "\n" +
+										str(self.LatestRTTYValues['alt']) + 'm')
+				self.ShowDistanceAndDirection()
+
+				# RTTY screen
+				buffer = self.textRTTY.get_buffer()
+				if buffer.get_line_count() > 50:
+					start = buffer.get_iter_at_line(0)
+					end = buffer.get_iter_at_line(1)
+					buffer.delete(start, end)
+				buffer.insert_at_cursor(str(self.LatestRTTYSentence + '\n'))
+				# scroll to bottom
+				adjustment = self.scrollRTTY.get_vadjustment()
+				adjustment.set_value(adjustment.get_upper())
 			
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.frameSSDV:
