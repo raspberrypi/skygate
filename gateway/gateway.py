@@ -48,13 +48,13 @@ class gateway(object):
 			self.LoRaFrequencyError = result['freq_error']
 			if self.habitat.IsSentence(packet[0]):
 				self.LatestLoRaSentence = ''.join(map(chr,bytes(packet).split(b'\x00')[0]))
-				print("LoRa Sentence=" + self.LatestLoRaSentence, end='')
+				print("LoRa Sentence: " + self.LatestLoRaSentence, end='')
 				if self.EnableLoRaUpload:
 					self.habitat.UploadTelemetry(self.RadioCallsign, self.LatestLoRaSentence)
 			elif self.habitat.IsSSDV(packet[0]):
 				packet = bytearray([0x55] + packet)
 				header = self.ssdv.extract_header(packet)
-				print("LoRa SSDV Header = ", header)
+				print("LoRa SSDV Hdr:", header)
 				if self.EnableLoRaUpload:
 					self.habitat.UploadSSDV(self.RadioCallsign, packet)
 				if self.StoreSSDVLocally:
@@ -65,7 +65,7 @@ class gateway(object):
 
 	def __rtty_sentence(self, sentence):
 		self.LatestRTTYSentence = sentence
-		print("RTTY Sentence=" + sentence, end='')
+		print("RTTY Sentence: " + sentence)
 
 	def run(self):
 		self.gps.run()

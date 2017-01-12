@@ -3,33 +3,14 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, Pango, GdkPixbuf
+import misc
 from gateway import *
+from habscreen import *
+from lorascreen import *
+from rttyscreen import *
+from gpsscreen import *
+from ssdvscreen import *
 import configparser
-
-def BoolToStr(value):
-	if value:
-		return '1'
-	else:
-		return '0'
-		
-def CalculateDistance(HABLatitude, HABLongitude, CarLatitude, CarLongitude):
-	HABLatitude = HABLatitude * math.pi / 180
-	HABLongitude = HABLongitude * math.pi / 180
-	CarLatitude = CarLatitude * math.pi / 180
-	CarLongitude = CarLongitude * math.pi / 180
-
-	return 6371000 * math.acos(math.sin(CarLatitude) * math.sin(HABLatitude) + math.cos(CarLatitude) * math.cos(HABLatitude) * math.cos(HABLongitude-CarLongitude))
-
-def CalculateDirection(HABLatitude, HABLongitude, CarLatitude, CarLongitude):
-	HABLatitude = HABLatitude * math.pi / 180
-	HABLongitude = HABLongitude * math.pi / 180
-	CarLatitude = CarLatitude * math.pi / 180
-	CarLongitude = CarLongitude * math.pi / 180
-
-	y = math.sin(HABLongitude - CarLongitude) * math.cos(HABLatitude)
-	x = math.cos(CarLatitude) * math.sin(HABLatitude) - math.sin(CarLatitude) * math.cos(HABLatitude) * math.cos(HABLongitude - CarLongitude)
-
-	return math.atan2(y, x) * 180 / math.pi
 	
 def PositionDlFldigi(window):
 	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(window.get_position()[0]+6) + ',' + str(window.get_position()[1]+250) + ',700,173')
@@ -48,8 +29,6 @@ class SkyGate:
 		self.LatestRTTYValues = None
 		self.LatestHABValues = None
 		self.SelectedSSDVIndex = 0
-		self.DisplayedSSDVFileName = ''
-		self.SSDVModificationDate = 0
 		self.LoRaFrequencyError = 999
 		
 		self.builder = Gtk.Builder()
@@ -61,11 +40,12 @@ class SkyGate:
 		self.frameDefault = self.builder.get_object("frameDefault")
 
 		# Selectable screens
-		self.frameHAB = self.builder.get_object("frameHAB")
-		self.frameLoRa = self.builder.get_object("frameLoRa")
-		self.frameRTTY = self.builder.get_object("frameRTTY")
-		self.frameGPS = self.builder.get_object("frameGPS")
-		self.frameSSDV = self.builder.get_object("frameSSDV")
+		self.HABScreen = HABScreen(self.builder)
+		self.LoRaScreen = LoRaScreen(self.builder)
+		self.RTTYScreen = RTTYScreen(self.builder)
+		self.GPSScreen = GPSScreen(self.builder)
+		self.SSDVScreen = SSDVScreen(self.builder)
+		
 		self.frameSettings = self.builder.get_object("frameSettings")
 
 		# Show default window
@@ -84,34 +64,6 @@ class SkyGate:
 		self.lblLon = self.builder.get_object("lblLon")
 		self.lblAlt = self.builder.get_object("lblAlt")
 		self.lblSats = self.builder.get_object("lblSats")
-		
-		# HAB Screen
-		self.textHABLoRa = self.builder.get_object("textHABLoRa")
-		self.textHABRTTY = self.builder.get_object("textHABRTTY")
-		self.lblHABDirection = self.builder.get_object("lblHABDirection")
-		self.lblHABDistance = self.builder.get_object("lblHABDistance")
-		self.lblHABLoRaFrequency = self.builder.get_object("lblHABLoRaFrequency")
-		self.lblHABRTTYFrequency = self.builder.get_object("lblHABRTTYFrequency")
-		
-		# LoRa Screen
-		self.textLoRa = self.builder.get_object("textLoRa")
-		self.scrollLoRa = self.builder.get_object("scrollLoRa")
-		self.lblLoRaFrequency = self.builder.get_object("lblLoRaFrequency")
-		self.lblLoRaFrequencyError = self.builder.get_object("lblLoRaFrequencyError")		
-		
-		# RTTY Screen
-		self.textRTTY = self.builder.get_object("textRTTY")
-		self.lblCurrentRTTY = self.builder.get_object("lblCurrentRTTY")
-		self.scrollRTTY = self.builder.get_object("scrollRTTY")
-		self.lblRTTYFrequency = self.builder.get_object("lblRTTYFrequency")
-		
-		# GPS Screen
-		self.textGPS = self.builder.get_object("textGPS")
-		
-		# SSDV Screen
-		self.imageSSDV = self.builder.get_object("imageSSDV")
-		self.boxSSDV = self.builder.get_object("boxSSDV")
-		self.lblSSDVInfo = self.builder.get_object("lblSSDVInfo")
 		
 		# Settings screen
 		
@@ -139,12 +91,12 @@ class SkyGate:
 		self.LoadSettingsFromFile(self.ConfigFileName)
 		
 		# Show current settings
-		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
-		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
+		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
 
-		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 
-		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
 		GObject.timeout_add_seconds(1, self.screen_updates_timer)
 
@@ -162,52 +114,50 @@ class SkyGate:
 
 	# Main window button signals
 	def on_buttonHAB_clicked(self, button):
-		self.SetNewWindow(self.frameHAB)
+		self.SetNewWindow(self.HABScreen.frame)
 	
 	def on_buttonLoRa_clicked(self, button):
-		self.SetNewWindow(self.frameLoRa)
+		self.SetNewWindow(self.LoRaScreen.frame)
 		
 	def on_buttonRTTY_clicked(self, button):
-		self.SetNewWindow(self.frameRTTY)
+		self.SetNewWindow(self.RTTYScreen.frame)
 		
 	def on_buttonGPS_clicked(self, button):
-		self.SetNewWindow(self.frameGPS)
+		self.SetNewWindow(self.GPSScreen.frame)
 		
 	def on_buttonSSDV_clicked(self, button):
-		self.SetNewWindow(self.frameSSDV)
+		self.SetNewWindow(self.SSDVScreen.frame)
 		self.SelectedSSDVIndex = 0
-		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
+		self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, True)
 		
 	def on_buttonSettings_clicked(self, button):
 		self.PopulateSettingsScreen()
 		self.SetNewWindow(self.frameSettings)
 		
-	# HAB window signals
-	
 	# LoRa window signals
 	def on_btnLoRaDown_clicked(self, button):
 		self.LoRaFrequency = self.LoRaFrequency - 0.001
-		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 	
 	def on_btnLoRaUp_clicked(self, button):
 		self.LoRaFrequency = self.LoRaFrequency + 0.001
-		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 	
 	# RTTY window signals
 	def on_btnRTTYDown_clicked(self, button):
 		self.RTTYFrequency = self.RTTYFrequency - 0.0005
-		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
-		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
+		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
 
 	def on_btnRTTYUp_clicked(self, button):
 		self.RTTYFrequency = self.RTTYFrequency + 0.0005
-		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
-		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
+		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
 		
 	# GPS window signals
@@ -215,12 +165,12 @@ class SkyGate:
 	# SSDV window signals
 	def on_btnSSDVPrevious_clicked(self, button):
 		self.SelectedSSDVIndex += 1
-		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
+		self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, True)
 	
 	def on_btnSSDVNext_clicked(self, button):
 		if self.SelectedSSDVIndex > 0:
 			self.SelectedSSDVIndex -= 1
-		self.ShowSSDVFile(self.SelectedSSDVIndex, True)
+		self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, True)
 	
 	# Settings window signals
 	def on_btnSettingsSave_clicked(self, button):
@@ -230,15 +180,6 @@ class SkyGate:
 		
 	def on_btnSettingsCancel_clicked(self, button):
 		self.PopulateSettingsScreen()
-
-	# General functions
-	def ShowDistanceAndDirection(self):
-		if self.LatestHABValues and self.gateway.gps:
-			DistanceToHAB = CalculateDistance(self.LatestHABValues['lat'], self.LatestHABValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
-			DirectionToHAB = CalculateDirection(self.LatestHABValues['lat'], self.LatestHABValues['lon'], self.gateway.gps.Position()['lat'], self.gateway.gps.Position()['lon'])
-																			
-			self.lblHABDirection.set_markup("<span font='48'>" + ["N","NE","E","SE","S","SW","W","NW","N"][int(round(DirectionToHAB/45))] + "</span>")
-			self.lblHABDistance.set_markup("<span font='32'>" + "%.3f" % (DistanceToHAB/1000) + " km</span>")
 	
 	def SetNewWindow(self, SomeWindow):
 		if self.CurrentWindow:
@@ -249,58 +190,8 @@ class SkyGate:
 		
 		self.CurrentWindow.reparent(self.frameMain)
 		
-		ShowDlFldigi(SomeWindow == self.frameRTTY)
-
-		
-	def GetSSDVFileName(self, SelectedFileIndex=0):
-		# Get list of jpg files
-		date_file_list = []
-		for file in glob.glob('images/*.jpg'):
-			stats = os.stat(file)
-			lastmod_date = time.localtime(stats[8])
-			date_file_tuple = lastmod_date, file
-			date_file_list.append(date_file_tuple)
-
-		if len(date_file_list) == 0:
-			return ''
-
-		if SelectedFileIndex < 0:
-			SelectedFileIndex = 0
-
-		if SelectedFileIndex >= len(date_file_list):
-			SelectedFileIndex = len(date_file_list)-1
-			
-		Index = len(date_file_list) - SelectedFileIndex - 1
-			
-		selection = sorted(date_file_list)[Index]
-		
-		return selection[1]
-
-	def ExtractImageInfoFromFileName(self, FileName):
-		print(FileName)
-		temp = FileName.split('/')
-		temp = temp[1].split('.')
-		fields = temp[0].split('_')
-		return {'callsign': fields[0], 'imagenumber': fields[1]}
-		
-	def ShowSSDVFile(self, SelectedFileIndex, Always):
-		# 0 means latest file; 1 onwards means 1st file (oldest), etc
-		FileName = self.GetSSDVFileName(SelectedFileIndex)
-		if FileName != '':
-			ModificationDate = time.ctime(os.path.getmtime(FileName))
-			if Always or (FileName != self.DisplayedSSDVFileName) or (ModificationDate != self.SSDVModificationDate):
-				# self.imageSSDV.set_from_file(FileName)
-				pixbuf = GdkPixbuf.Pixbuf.new_from_file(FileName)
-				pixbuf = pixbuf.scale_simple(552, 414, GdkPixbuf.InterpType.BILINEAR)
-				self.imageSSDV.set_from_pixbuf(pixbuf)
-
-				ImageInfo = self.ExtractImageInfoFromFileName(FileName)
-				self.lblSSDVInfo.set_text('Callsign ' + ImageInfo['callsign'] + ', Image ' + ImageInfo['imagenumber'])
-
-		
-			self.DisplayedSSDVFileName = FileName
-			self.SSDVModificationDate = ModificationDate
-		
+		ShowDlFldigi(SomeWindow == self.RTTYScreen.frame)
+				
 	def LoadSettingsFromFile(self, FileName):
 		if os.path.isfile(FileName):
 			# Open config file
@@ -323,14 +214,14 @@ class SkyGate:
 		# LoRa
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 		self.gateway.lora.SetStandardLoRaParameters(self.LoRaMode)
-		self.lblHABLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
+		self.HABScreen.ShowFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(self.LoRaFrequency) + ' MHz, Mode ' + str(self.LoRaMode))
 		self.gateway.EnableLoRaUpload = self.EnableLoRaUpload
 		
 		# RTTY
 		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
-		self.lblHABRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
-		self.lblRTTYFrequency.set_text("{0:.4f}".format(self.RTTYFrequency) + ' MHz')
+		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
+		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
 		# Car
 		self.gateway.habitat.ChaseCarEnabled = self.ChaseCarEnabled
@@ -412,15 +303,7 @@ class SkyGate:
 			self.lblSats.set_text(str(CarPosition['sats']) + ' Sats')
 			
 			# GPS screen
-			buffer = self.textGPS.get_buffer()
-			if buffer.get_line_count() > 50:
-				start = buffer.get_iter_at_line(0)
-				end = buffer.get_iter_at_line(1)
-				buffer.delete(start, end)
-			buffer.insert_at_cursor(str(CarPosition) + "\r\n")
-			# scroll to bottom
-			adjustment = self.frameGPS.get_vadjustment()
-			adjustment.set_value(adjustment.get_upper())
+			self.GPSScreen.AppendLine(str(CarPosition) + "\n")
 			
 		# LoRa
 		if self.gateway.LatestLoRaSentence != self.LatestLoRaSentence:
@@ -437,49 +320,24 @@ class SkyGate:
 				self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
 			
 			# HAB screen updates
-			buffer = self.textHABLoRa.get_buffer()		
-			start = buffer.get_iter_at_offset(0)
-			end = buffer.get_iter_at_offset(999)
-			buffer.delete(start, end)
-			buffer.insert_at_cursor(self.LatestLoRaValues['payload'] + "\n" +
-									self.LatestLoRaValues['time'] + "\n" +
-									"{0:.5f}".format(self.LatestLoRaValues['lat']) + "\n" +
-									"{0:.5f}".format(self.LatestLoRaValues['lon']) + "\n" +
-									str(self.LatestLoRaValues['alt']) + 'm')
-			self.ShowDistanceAndDirection()
+			self.HABScreen.ShowLoRaValues(self.LatestLoRaValues, self.gateway.gps.Position())
 
 			# LoRa screen
-			buffer = self.textLoRa.get_buffer()
-			if buffer.get_line_count() > 50:
-				start = buffer.get_iter_at_line(0)
-				end = buffer.get_iter_at_line(1)
-				buffer.delete(start, end)
-			buffer.insert_at_cursor(str(self.LatestLoRaSentence))
-			# scroll to bottom
-			adjustment = self.scrollLoRa.get_vadjustment()
-			adjustment.set_value(adjustment.get_upper())
+			self.LoRaScreen.AppendLine(str(self.LatestLoRaSentence))
 			
 		# LoRa SSDV
 		if self.gateway.LatestLoRaPacketHeader != self.LatestLoRaPacketHeader:
 			# New SSDV packet
 			self.LatestLoRaPacketHeader = self.gateway.LatestLoRaPacketHeader
-			buffer = self.textLoRa.get_buffer()
-			if buffer.get_line_count() > 50:
-				start = buffer.get_iter_at_line(0)
-				end = buffer.get_iter_at_line(1)
-				buffer.delete(start, end)
-			buffer.insert_at_cursor(str(self.LatestLoRaPacketHeader) + '\n')
-			# scroll to bottom
-			adjustment = self.scrollLoRa.get_vadjustment()
-			adjustment.set_value(adjustment.get_upper())
+			
+			self.LoRaScreen.AppendLine(str(self.LatestLoRaPacketHeader) + '\n')
 		
 		# LoRa RSSI etc
 		if self.gateway.LoRaFrequencyError != self.LoRaFrequencyError:
 			self.LoRaFrequencyError = self.gateway.LoRaFrequencyError
-			self.lblLoRaFrequencyError.set_text("Err: {0:.1f}".format(self.LoRaFrequencyError) + ' kHz')
-			
+			self.LoRaScreen.ShowFrequencyError(self.LoRaFrequencyError)			
 
-		self.lblCurrentRTTY.set_text(self.gateway.rtty.CurrentRTTY)
+		self.RTTYScreen.ShowCurrentRTTY(self.gateway.rtty.CurrentRTTY)
 		
 		# RTTY
 		if self.gateway.LatestRTTYSentence != self.LatestRTTYSentence:
@@ -496,31 +354,14 @@ class SkyGate:
 				self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
 			
 				# HAB screen updates
-				buffer = self.textHABRTTY.get_buffer()		
-				start = buffer.get_iter_at_offset(0)
-				end = buffer.get_iter_at_offset(999)
-				buffer.delete(start, end)
-				buffer.insert_at_cursor(self.LatestRTTYValues['payload'] + "\n" +
-										self.LatestRTTYValues['time'] + "\n" +
-										"{0:.5f}".format(self.LatestRTTYValues['lat']) + "\n" +
-										"{0:.5f}".format(self.LatestRTTYValues['lon']) + "\n" +
-										str(self.LatestRTTYValues['alt']) + 'm')
-				self.ShowDistanceAndDirection()
+				self.HABScreen.ShowRTTYValues(self.LatestRTTYValues, self.gateway.gps.Position())
 
 				# RTTY screen
-				buffer = self.textRTTY.get_buffer()
-				if buffer.get_line_count() > 50:
-					start = buffer.get_iter_at_line(0)
-					end = buffer.get_iter_at_line(1)
-					buffer.delete(start, end)
-				buffer.insert_at_cursor(str(self.LatestRTTYSentence + '\n'))
-				# scroll to bottom
-				adjustment = self.scrollRTTY.get_vadjustment()
-				adjustment.set_value(adjustment.get_upper())
+				self.RTTYScreen.AppendLine(str(self.LatestRTTYSentence + '\n'))
 			
 		# Only update the image on the SSDV window if it's being displayed
-		if self.CurrentWindow == self.frameSSDV:
-			self.ShowSSDVFile(self.SelectedSSDVIndex, False)
+		if self.CurrentWindow == self.SSDVScreen.frame:
+			self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, False)
 			
 		return True	# Run again
 

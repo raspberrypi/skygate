@@ -73,7 +73,7 @@ class SSDV(object):
 			
 	def ConvertSSDVFile(self, SourceFileName, TargetFileName):
 		print("Convert " + SourceFileName + " to " + TargetFileName)
-		os.system("ssdv -d " + SourceFileName + " " + TargetFileName)
+		os.system("ssdv -d " + SourceFileName + " " + TargetFileName + " 2> /dev/null")
 		
 	def ConvertSSDVFiles(self):
 		# Get list of jpg files
