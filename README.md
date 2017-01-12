@@ -1,6 +1,6 @@
 # skygate - Modular Python HAB receiver and uploader, with PyGTK user interface
 
-HAB receiver software for tracking LoRa and RTTY payloads, and uploading telemetry and image data to Habitat along with the receiver's GPS posotion
+HAB receiver software for tracking LoRa and RTTY payloads, and uploading telemetry and image data to Habitat along with the receiver's GPS position
 
 
 GPS
@@ -31,8 +31,11 @@ sudo apt-get install wmctrl
 It also requires SSDV to be installed:
 
 cd
+
 git clone https://github.com/fsphil/ssdv.git
+
 cd ssdv
+
 sudo make install
 
  
@@ -46,17 +49,26 @@ https://ukhas.org.uk/projects:dl-fldigi:build-raspbian
 RTL SDR
 =======
 
-Assuming use of an RTL_FM radio receiver, the RTL SDR software needs to be installed:
+Assuming use of an RTL_FM radio receiver, the RTL SDR software needs to be installed.  Specifically, my modified version is need in order to allow for retuning.
 
 sudo apt-get install cmake build-essential python-pip libusb-1.0-0-dev python-numpy git pandoc
+
 cd ~
-git clone git://git.osmocom.org/rtl-sdr.git
+
+git clone https://github.com/daveake/rtl-sdr.git
+
 cd rtl-sdr
+
 mkdir build
+
 cd build
+
 cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
+
 make
+
 sudo make install
+
 sudo ldconfig
 
 
