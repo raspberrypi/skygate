@@ -6,13 +6,10 @@ HAB receiver software for tracking LoRa and RTTY payloads, and uploading telemet
 GPS
 ===
 
-The GPS program is written in C, and uses WiringPi which should be installed with:
-
-sudo apt-get install wiringpi
-
 This part of the software needs to be compiled and linked, with:
 
 cd gps
+
 make
 
 
