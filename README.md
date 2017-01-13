@@ -39,9 +39,34 @@ sudo make install
 Decoding RTTY
 =============
 
-RTTY is decoded external using dl-fldigi.  Installation instructions are here:
+RTTY is decoded external using dl-fldigi, with the audio feed by pulseaudio.  To install:
 
-https://ukhas.org.uk/projects:dl-fldigi:build-raspbian
+sudo apt-get install git-core libcurl4-openssl-dev autoconf
+
+sudo apt-get install libfltk1.3-dev
+
+sudo apt-get install libjpeg9-dev
+
+sudo apt-get install libsamplerate0-dev
+
+sudo apt-get install libssl-dev
+
+sudo apt-get install gettext
+
+sudo apt-get install portaudio19-dev
+
+vi src/Makefile.am
+
+(comment-out TESTS line, save)
+
+autoreconf -vfi
+
+./configure --disable-flarq
+
+make
+
+sudo make install
+
 
 RTL SDR
 =======
@@ -79,7 +104,7 @@ Advanced Options --> Enable SPI
 Note that the SPI settings have been moved to "Interfacing Options" in the latest Raspbian update.
 
 
-Allow the serial port to be used with:
+f you are using a GPS HAT, then allow the serial port to be used with:
 
 sudo systemctl mask serial-getty@ttyAMA0.service
 
@@ -104,7 +129,9 @@ sudo ./gps
 The receiver program can be started manually from a terminal window in an X session with:
 
 cd
+
 cd skygate/gateway
+
 python3 skygate.py
 
 

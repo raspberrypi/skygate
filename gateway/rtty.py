@@ -13,6 +13,7 @@ class RTTY(Radio):
 		self.SetFrequency(Frequency)
 		self.SetBaudRate(BaudRate)
 		self.listening = False
+		self.CurrentRTTY = ''
 
 	def SetBaudRate(self, BaudRate):
 		self.BaudRate = BaudRate
@@ -49,7 +50,6 @@ class RTTY(Radio):
 					self.CallbackWhenReceived(line)
 
 	def Processdlfldigi(self, s):
-		self.CurrentRTTY = ''
 		while 1:
 			reply = s.recv(1)
 			if reply:
