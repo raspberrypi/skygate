@@ -1,5 +1,7 @@
 *.jpg
 *.bin
+*.o
+gps/gps
 __pycache__
 images
 *.pyc
