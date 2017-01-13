@@ -41,19 +41,21 @@ Decoding RTTY
 
 RTTY is decoded external using dl-fldigi, with the audio feed by pulseaudio.  To install:
 
-sudo apt-get install git-core libcurl4-openssl-dev autoconf
+sudo apt-get install git-core libcurl4-openssl-dev autoconf libfltk1.3-dev
 
-sudo apt-get install libfltk1.3-dev
+sudo apt-get install libjpeg9-dev libsamplerate0-dev libssl-dev gettext pavucontrol libpulse-dev portaudio19-dev
 
-sudo apt-get install libjpeg9-dev
+cd
 
-sudo apt-get install libsamplerate0-dev
+git clone git://github.com/ukhas/dl-fldigi.git
 
-sudo apt-get install libssl-dev
+cd dl-fldigi
 
-sudo apt-get install gettext
+git checkout DL3.1
 
-sudo apt-get install portaudio19-dev
+git submodule init
+
+git submodule update
 
 vi src/Makefile.am
 
