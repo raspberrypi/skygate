@@ -128,6 +128,33 @@ cd
 cd skygate/gps
 sudo ./gps
 
+Start pulseaudio with
+
+pulseaudio -D
+
+Start the RTL SDR software with
+
+rtl_fm -M usb -f 434.253M -s 192000 -r 48000 - | aplay -r 48k -f S16_LE -t raw -c 1
+
+You should now hear sound through the Pi speaker.
+
+Start dl-fldigi with
+
+cd
+
+cd dl-fldigi
+
+./src/dl-fldigi --wfall-only
+
+At startup, enter your receiver callsign.  Then, on the audio config page, select Pulse Audio
+
+Then configure dl-fldigi through its menus:
+
+Op Mode --> RTTY Custom --> Set 300 baud, 8 data bits, 2 stop bits, 830Hz shift
+
+(or, if not using SSDV) 50 baud, 7 data bits, 2 stop bits, 830Hz shift
+
+
 The receiver program can be started manually from a terminal window in an X session with:
 
 cd
