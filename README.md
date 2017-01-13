@@ -51,7 +51,7 @@ RTL SDR
 
 Assuming use of an RTL_FM radio receiver, the RTL SDR software needs to be installed.  Specifically, my modified version is need in order to allow for retuning.
 
-sudo apt-get install cmake build-essential python-pip libusb-1.0-0-dev python-numpy git pandoc
+sudo apt-get install git cmake libusb-1.0-0-dev
 
 cd ~
 
