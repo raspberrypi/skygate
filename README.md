@@ -3,16 +3,6 @@
 HAB receiver software for tracking LoRa and RTTY payloads, and uploading telemetry and image data to Habitat along with the receiver's GPS position
 
 
-GPS
-===
-
-This part of the software needs to be compiled and linked, with:
-
-cd gps
-
-make
-
-
 Receiver
 ========
 

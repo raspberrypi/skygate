@@ -84,6 +84,7 @@ class RTTY(Radio):
 			s.close()
 		except:
 			print("Failed to connect to dl-fldigi")
+			time.sleep(5)
 			# Sources[2]['connected'] = 0
 	
 	def listen_thread(self):

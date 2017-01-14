@@ -1,4 +1,4 @@
-from cgps import *
+from gps import *
 from lora import *
 from rtty import *
 from habitat import *

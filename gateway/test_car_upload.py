@@ -1,4 +1,4 @@
-from cgps import *
+from gps import *
 from habitat import *
 import time
 
