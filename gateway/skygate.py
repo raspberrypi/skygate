@@ -29,9 +29,8 @@ class SkyGate:
 		self.LatestRTTYValues = None
 		self.LatestHABValues = None
 		self.SelectedSSDVIndex = 0
-		self.LoRaFrequencyError = 999
+		self.LoRaFrequencyError = 0
 		self.CurrentGPSPosition = None
-		self.GPSDevice = '/dev/ttyAMA0'
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -318,24 +317,23 @@ class SkyGate:
 		ShowDlFldigi(SomeWindow == self.RTTYScreen.frame)
 				
 	def LoadSettingsFromFile(self, FileName):
-		if os.path.isfile(FileName):
-			# Open config file
-			config = configparser.RawConfigParser()   
-			config.read(FileName)
+		# Open config file
+		config = configparser.RawConfigParser()   
+		config.read(FileName)
 
-			self.ReceiverCallsign = config.get('Receiver', 'Callsign', fallback='CHANGE_ME')
+		self.ReceiverCallsign = config.get('Receiver', 'Callsign', fallback='CHANGE_ME')
 
-			self.LoRaFrequency = float(config.get('LoRa', 'Frequency', fallback='434.450'))
-			self.LoRaMode = int(config.get('LoRa', 'Mode', fallback='1'))
-			self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload', fallback=False)
-			
-			self.RTTYFrequency = float(config.get('RTTY', 'Frequency', fallback='434.250'))
-			
-			self.ChaseCarID = config.get('ChaseCar', 'ID', fallback='CHANGE_ME')
-			self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period', fallback='30'))
-			self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload', fallback=False)
+		self.LoRaFrequency = float(config.get('LoRa', 'Frequency', fallback='434.450'))
+		self.LoRaMode = int(config.get('LoRa', 'Mode', fallback='1'))
+		self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload', fallback=False)
+		
+		self.RTTYFrequency = float(config.get('RTTY', 'Frequency', fallback='434.250'))
+		
+		self.ChaseCarID = config.get('ChaseCar', 'ID', fallback='CHANGE_ME')
+		self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period', fallback='30'))
+		self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload', fallback=False)
 
-			self.GPSDevice = config.get('GPS', 'Device', fallback='/dev/ttyAMA0')
+		self.GPSDevice = config.get('GPS', 'Device', fallback='/dev/ttyAMA0')
 
 	def ApplySettings(self):
 		# LoRa
