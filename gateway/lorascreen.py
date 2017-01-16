@@ -8,9 +8,10 @@ class LoRaScreen(object):
 		self.scrollLoRa = builder.get_object("scrollLoRa")
 		self.lblLoRaFrequency = builder.get_object("lblLoRaFrequency")
 		self.lblLoRaFrequencyError = builder.get_object("lblLoRaFrequencyError")		
+		self.Log = []
 	
 	def AppendLine(self, Line):
-		AppendTextToTextBox(self.scrollLoRa, self.textLoRa, Line)
+		self.Log = UpdateLog(self.textLoRa, self.Log, Line, 18)
 		
 	def ShowLoRaFrequencyAndMode(self, LoRaFrequency, LoRaMode):
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(LoRaFrequency) + ' MHz, Mode ' + str(LoRaMode))

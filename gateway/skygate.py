@@ -2,7 +2,7 @@
 
 import gi
 gi.require_version('Gtk', '3.0')
-from gi.repository import Gtk, GObject, Pango, GdkPixbuf
+from gi.repository import Gtk, GObject, Pango, Gdk, GLib, GdkPixbuf
 import misc
 from gateway import *
 from habscreen import *
@@ -30,6 +30,7 @@ class SkyGate:
 		self.LatestHABValues = None
 		self.SelectedSSDVIndex = 0
 		self.LoRaFrequencyError = 999
+		self.CurrentGPSPosition = None
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -66,11 +67,23 @@ class SkyGate:
 		self.lblSats = self.builder.get_object("lblSats")
 		
 		# Settings screen
+		# This presently is done as-required
 		
-		self.windowMain.resize(800,480)
-		self.windowMain.move(100,100)
+		# Size main window to match the official Pi display, if we can
+		ScreenInfo = Gdk.Screen.get_default()
+		ScreenWidth = ScreenInfo.get_width()
+		ScreenHeight = ScreenInfo.get_height()
+		# Set to size of official display, or available space, whichever is smaller
+		self.windowMain.resize(min(ScreenWidth, 800), min(ScreenHeight, 480))
+		# If this is the official touchscreen or smaller, position at top-left
+		if (ScreenWidth <= 800) or (ScreenHeight <= 480):
+			self.windowMain.move(0,0)
+		else:
+			self.windowMain.move(100,100)
+			
 		self.windowMain.show_all()
 		
+		# Place dl-fldigi main window where we ant it (works OK, till we find a way of making it a child window)
 		PositionDlFldigi(self.windowMain)
 		
 		# Default settings
@@ -98,10 +111,17 @@ class SkyGate:
 
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
-		GObject.timeout_add_seconds(1, self.screen_updates_timer)
+		# Timer for updating UI
+		GObject.timeout_add_seconds(5, self.ssdv_update_timer)
 
 		# Gateway
-		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled, RadioCallsign=self.ReceiverCallsign, LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload, RTTYFrequency=self.RTTYFrequency)
+		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled,
+								RadioCallsign=self.ReceiverCallsign,
+								LoRaChannel=1, LoRaFrequency=self.LoRaFrequency, LoRaMode=self.LoRaMode, EnableLoRaUpload=self.EnableLoRaUpload,
+								RTTYFrequency=self.RTTYFrequency,
+								OnNewGPSPosition=self._NewGPSPosition,
+								OnNewRTTYData=self._NewRTTYData, OnNewRTTYSentence=self._NewRTTYSentence,
+								OnNewLoRaSentence=self._NewLoRaSentence, OnNewLoRaSSDV=self._NewLoRaSSDV, OnLoRaFrequencyError=self._LoRaFrequencyError)
 		self.gateway.run()
 
 	def AdjustLoRaFrequency(self, Delta):
@@ -152,6 +172,11 @@ class SkyGate:
 		self.PopulateSettingsScreen()
 		self.SetNewWindow(self.frameSettings)
 		
+	def on_AutoScroll(self, *args):
+		ScrolledWindow = args[0]
+		adj = ScrolledWindow.get_vadjustment()
+		adj.set_value(adj.get_upper() - adj.get_page_size())		
+		
 	# LoRa window signals
 	def on_btnLoRaDown_clicked(self, button):
 		self.AdjustLoRaFrequency(-0.001)
@@ -167,6 +192,7 @@ class SkyGate:
 		self.AdjustRTTYFrequency(0.0005)
 		
 	# GPS window signals
+	# (none)
 	
 	# SSDV window signals
 	def on_btnSSDVPrevious_clicked(self, button):
@@ -186,6 +212,108 @@ class SkyGate:
 		
 	def on_btnSettingsCancel_clicked(self, button):
 		self.PopulateSettingsScreen()
+	
+	# Gtk UI updaters
+	def _UpdateGPSPosition(self):
+		Position = self.CurrentGPSPosition
+
+		# Lower status bar
+		self.lblTime.set_text(Position['time'])
+		self.lblLat.set_text("{0:.5f}".format(Position['lat']))
+		self.lblLon.set_text("{0:.5f}".format(Position['lon']))
+		self.lblAlt.set_text(str(int(Position['alt'])) + ' m')
+		self.lblSats.set_text(str(Position['sats']) + ' Sats')
+		
+		# GPS screen
+		Line = Position['time'] + ': lat=' + "{0:.5f}".format(Position['lat']) + ', lone=' + "{0:.5f}".format(Position['lon']) + ', alt=' + str(int(Position['alt'])) + ', sats=' + str(Position['sats'])
+		self.GPSScreen.AppendLine(Line)
+		
+		return False	# So we don't get called again, until there's a new GPS position
+	
+	def _UpdateCurrentRTTY(self):
+		self.RTTYScreen.ShowCurrentRTTY(self.CurrentRTTY[-80:])
+		
+		return False
+		
+	def _UpdateRTTYSentence(self):	
+		# Update main screen header
+		self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
+		self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
+		self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
+		self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
+		self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
+	
+		# Update HAB screen
+		self.HABScreen.ShowRTTYValues(self.LatestRTTYValues, self.gateway.gps.Position())
+
+		# Update RTTY screen
+		self.RTTYScreen.AppendLine(str(self.LatestRTTYSentence + '\n'))
+	
+		return False
+
+	def _UpdateLoRaSentence(self):
+		# Update main screen header
+		self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
+		self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
+		self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
+		self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
+		self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
+			
+		# Update HAB screen
+		self.HABScreen.ShowLoRaValues(self.LatestLoRaValues, self.gateway.gps.Position())
+
+		# Update LoRa screen
+		self.LoRaScreen.AppendLine(str(self.LatestLoRaSentence))
+	
+		return False
+			
+	def _UpdateLoRaSSDV(self):
+		# Update LoRa screen
+		self.LoRaScreen.AppendLine('SSDV packet, payload ID: ' + self.LatestLoRaPacketHeader['callsign'] + ', image #: ' + str(self.LatestLoRaPacketHeader['imagenumber']) + ', packet #: ' + str(self.LatestLoRaPacketHeader['packetnumber']))
+		
+		return False
+
+	def _UpdateLoRaFrequencyError(self):
+		# LoRa Frequency Error
+		self.LoRaScreen.ShowFrequencyError(self.LoRaFrequencyError)			
+	
+		return False
+		
+	# Callbacks
+	
+	def _NewGPSPosition(self, Position):
+		self.CurrentGPSPosition = Position
+		GLib.idle_add(self._UpdateGPSPosition)
+
+	def _NewRTTYData(self, CurrentRTTY):
+		self.CurrentRTTY = CurrentRTTY
+		GLib.idle_add(self._UpdateCurrentRTTY)
+
+	def _NewRTTYSentence(self, Sentence):
+		self.LatestRTTYSentence = Sentence
+		self.LatestRTTYValues = self.DecodeSentence(Sentence)
+		if self.LatestRTTYValues:
+			self.LatestHABValues = self.LatestRTTYValues
+			GLib.idle_add(self._UpdateRTTYSentence)
+
+	def _NewLoRaSentence(self, Sentence):
+		self.LatestLoRaSentence = Sentence
+		self.LatestLoRaValues = self.DecodeSentence(Sentence)
+
+		if self.LatestLoRaValues:
+			self.LatestHABValues = self.LatestLoRaValues
+			GLib.idle_add(self._UpdateLoRaSentence)
+
+	def _NewLoRaSSDV(self, header):
+		self.LatestLoRaPacketHeader = header		
+		GLib.idle_add(self._UpdateLoRaSSDV)
+		
+	def _LoRaFrequencyError(self, FrequencyError):
+		print("C: FrequencyError =", FrequencyError)
+		self.LoRaFrequencyError = FrequencyError
+		GLib.idle_add(self._UpdateLoRaFrequencyError)
+			
+	# Functions
 	
 	def SetNewWindow(self, SomeWindow):
 		if self.CurrentWindow:
@@ -297,74 +425,7 @@ class SkyGate:
 		except:
 			return None
 		
-	def screen_updates_timer(self, *args):
-		# Local GPS
-		CarPosition = self.gateway.gps.Position()
-		if CarPosition:
-			# Lower status bar
-			self.lblTime.set_text(CarPosition['time'])
-			self.lblLat.set_text("{0:.5f}".format(CarPosition['lat']))
-			self.lblLon.set_text("{0:.5f}".format(CarPosition['lon']))
-			self.lblAlt.set_text(str(int(CarPosition['alt'])) + ' m')
-			self.lblSats.set_text(str(CarPosition['sats']) + ' Sats')
-			
-			# GPS screen
-			self.GPSScreen.AppendLine(str(CarPosition) + "\n")
-			
-		# LoRa
-		if self.gateway.LatestLoRaSentence != self.LatestLoRaSentence:
-			# New sentence
-			# Top status line
-			self.LatestLoRaSentence = self.gateway.LatestLoRaSentence
-			self.LatestLoRaValues = self.DecodeSentence(self.LatestLoRaSentence)
-			if self.LatestLoRaValues:
-				self.LatestHABValues = self.LatestLoRaValues
-				self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
-				self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
-				self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
-				self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
-				self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
-			
-			# HAB screen updates
-			self.HABScreen.ShowLoRaValues(self.LatestLoRaValues, self.gateway.gps.Position())
-
-			# LoRa screen
-			self.LoRaScreen.AppendLine(str(self.LatestLoRaSentence))
-			
-		# LoRa SSDV
-		if self.gateway.LatestLoRaPacketHeader != self.LatestLoRaPacketHeader:
-			# New SSDV packet
-			self.LatestLoRaPacketHeader = self.gateway.LatestLoRaPacketHeader
-			
-			self.LoRaScreen.AppendLine(str(self.LatestLoRaPacketHeader) + '\n')
-		
-		# LoRa RSSI etc
-		if self.gateway.LoRaFrequencyError != self.LoRaFrequencyError:
-			self.LoRaFrequencyError = self.gateway.LoRaFrequencyError
-			self.LoRaScreen.ShowFrequencyError(self.LoRaFrequencyError)			
-
-		self.RTTYScreen.ShowCurrentRTTY(self.gateway.rtty.CurrentRTTY)
-		
-		# RTTY
-		if self.gateway.LatestRTTYSentence != self.LatestRTTYSentence:
-			# New sentence
-			# Top status line
-			self.LatestRTTYSentence = self.gateway.LatestRTTYSentence
-			self.LatestRTTYValues = self.DecodeSentence(self.LatestRTTYSentence)
-			if self.LatestRTTYValues:
-				self.LatestHABValues = self.LatestRTTYValues
-				self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
-				self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
-				self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
-				self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
-				self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
-			
-				# HAB screen updates
-				self.HABScreen.ShowRTTYValues(self.LatestRTTYValues, self.gateway.gps.Position())
-
-				# RTTY screen
-				self.RTTYScreen.AppendLine(str(self.LatestRTTYSentence + '\n'))
-			
+	def ssdv_update_timer(self, *args):
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.SSDVScreen.frame:
 			self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, False)

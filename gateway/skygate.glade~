@@ -66,6 +66,7 @@
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="editable">False</property>
+            <signal name="size-allocate" handler="on_AutoScroll" object="frameGPS" swapped="no"/>
           </object>
         </child>
       </object>
@@ -236,7 +237,7 @@
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="editable">False</property>
-                <property name="justification">fill</property>
+                <property name="justification">center</property>
               </object>
               <packing>
                 <property name="expand">True</property>

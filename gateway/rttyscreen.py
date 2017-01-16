@@ -9,10 +9,11 @@ class RTTYScreen(object):
 		self.lblCurrentRTTY = builder.get_object("lblCurrentRTTY")
 		self.scrollRTTY = builder.get_object("scrollRTTY")
 		self.lblRTTYFrequency = builder.get_object("lblRTTYFrequency")
+		self.Log = []
 	
 	def AppendLine(self, Line):
-		AppendTextToTextBox(self.scrollRTTY, self.textRTTY, Line)
-		
+		self.Log = UpdateLog(self.textRTTY, self.Log, Line, 6)
+			
 	def ShowRTTYFrequency(self, Frequency):
 		self.lblRTTYFrequency.set_text("{0:.4f}".format(Frequency) + ' MHz')
 

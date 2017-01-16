@@ -6,6 +6,8 @@ import time
 
 class RTTY(Radio):
 	def __init__(self, Frequency=434.250, BaudRate=50):
+		self.CallbackWhenReceived = None
+		self.CallbackEveryByte = None
 		self.SentenceCount = 0
 		self.LatestSentence = None
 		self.Frequency = Frequency
@@ -40,8 +42,6 @@ class RTTY(Radio):
 		# The $ and LF are already present
 		# Check checksum/CRC and then save and do callback
 		# $BUZZ,483,10:04:27,51.95022,-2.54435,00190,5*6856
-		print(line)
-		
 		if self.ChecksumOK(line):
 			if self.listening:
 				self.SentenceCount += 1
@@ -54,19 +54,19 @@ class RTTY(Radio):
 			reply = s.recv(1)
 			if reply:
 				value = reply[0]
-				if value == 9:
-					pass
-				elif value == 10:
+				if value == 10:
 					if self.CurrentRTTY != '':
-						self.CurrentRTTY = self.CurrentRTTY + temp
-						self.ProcessdlfldigiLine(self.CurrentRTTY)
+						if self.CurrentRTTY[0] == '$':
+							self.ProcessdlfldigiLine(self.CurrentRTTY)
 						self.CurrentRTTY = ''
-				elif (value >= 32) and (value < 128):
+				elif (value >= 32) and (value < 127):
 					temp = chr(reply[0])
-					if temp == '$':
-						self.CurrentRTTY = temp
-					elif self.CurrentRTTY != '':
-						self.CurrentRTTY = self.CurrentRTTY + temp
+					self.CurrentRTTY = (self.CurrentRTTY + temp)[-256:]
+					if (temp == '$' and self.CurrentRTTY[0] != '$'):
+						self.CurrentRTTY = '$'
+					
+				if self.CallbackEveryByte:
+					self.CallbackEveryByte(self.CurrentRTTY)
 			else:
 				time.sleep(1)
 					
@@ -77,7 +77,6 @@ class RTTY(Radio):
 			s.connect((host, port))    
 			
 			print("Connected to dl-fldigi")
-			# Sources[2]['connected'] = 1
 			
 			self.Processdlfldigi(s)
 
@@ -85,7 +84,6 @@ class RTTY(Radio):
 		except:
 			print("Failed to connect to dl-fldigi")
 			time.sleep(5)
-			# Sources[2]['connected'] = 0
 	
 	def listen_thread(self):
 		host = "localhost"
@@ -95,11 +93,11 @@ class RTTY(Radio):
 		while True:		
 			self.dodlfldigi(host, port)
 				
-	def listen_for_sentences(self, callback=None):
-		print("listen_for_sentences")
-		self.CallbackWhenReceived = callback
+	def listen_for_sentences(self, sentence_callback=None, byte_callback=None):
+		self.CallbackWhenReceived = sentence_callback
+		self.CallbackEveryByte = byte_callback
 		
-		if callback == None:
+		if sentence_callback == None:
 			# Stop listening
 			self.listening = False
 		elif not self.listening:

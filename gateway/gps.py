@@ -54,13 +54,14 @@ def ProcessLine(self, Line):
 			if GPSPosition['fixtype'] != int(Fields[6]):
 				GPSPosition['fixtype'] = int(Fields[6])
 				if GPSPosition['fixtype'] > 0:
-					if self._WhenLockGained != None:
+					if self._WhenLockGained:
 						self._WhenLockGained()
 				else:
-					print("FIX TYPE = ", GPSPosition['fixtype'])
-					if self._WhenLockLost != None:
+					if self._WhenLockLost:
 						self._WhenLockLost()
 			GPSPosition['sats'] = int(Fields[7])
+			if self._WhenNewPosition:
+				self._WhenNewPosition(GPSPosition)
 		elif Line[3:6] == "RMC":
 			# print("Disabling RMC")
 			setRMC = bytearray([0xB5, 0x62, 0x06, 0x01, 0x08, 0x00, 0xF0, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x04, 0x40])
@@ -152,6 +153,14 @@ class GPS(object):
 	@WhenLockLost.setter
 	def WhenLockGained(self, value):
 		self._WhenLockLost = value
+	
+	@property
+	def WhenNewPosition(self):
+		return self._WhenNewPosition
+
+	@WhenLockGained.setter
+	def WhenNewPosition(self, value):
+		self._WhenNewPosition = value
 	
 	def run(self):
 		t = threading.Thread(target=self.__gps_thread)

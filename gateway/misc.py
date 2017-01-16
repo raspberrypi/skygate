@@ -32,13 +32,10 @@ def PlaceTextInTextBox(TextBox, SomeText):
 	buffer.delete(start, end)
 	buffer.insert_at_cursor(SomeText)
 
-def AppendTextToTextBox(ScrollBox, TextBox, SomeText):
+def UpdateLog(TextBox, Log, Line, MaxLines):
+	Log += [Line.rstrip()]
+	first = max(0, len(Log)-MaxLines)
+	Log = Log[first:]
 	buffer = TextBox.get_buffer()
-	if buffer.get_line_count() > 50:
-		start = buffer.get_iter_at_line(0)
-		end = buffer.get_iter_at_line(1)
-		buffer.delete(start, end)
-	buffer.insert_at_cursor(SomeText)
-	# scroll to bottom
-	adjustment = ScrollBox.get_vadjustment()
-	adjustment.set_value(adjustment.get_upper())
+	buffer.set_text("\n".join(Log))
+	return Log
