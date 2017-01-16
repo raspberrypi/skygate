@@ -18,7 +18,9 @@ class gateway(object):
 					RTTYFrequency=434.250,
 					OnNewGPSPosition=None,
 					OnNewRTTYData=None, OnNewRTTYSentence=None,
-					OnNewLoRaSentence=None, OnNewLoRaSSDV=None, OnLoRaFrequencyError=None):
+					OnNewLoRaSentence=None, OnNewLoRaSSDV=None, OnLoRaFrequencyError=None,
+					GPSDevice=None):
+					
 		self.RadioCallsign = RadioCallsign
 		self.EnableLoRaUpload = EnableLoRaUpload
 		self.StoreSSDVLocally = StoreSSDVLocally
@@ -33,11 +35,10 @@ class gateway(object):
 		self.OnNewLoRaSSDV = OnNewLoRaSSDV
 		self.OnLoRaFrequencyError = OnLoRaFrequencyError
 		
-		
 		self.ssdv = SSDV()
 		self.ssdv.StartConversions()
 		
-		self.gps = GPS()
+		self.gps = GPS(Device=GPSDevice)
 		self.gps.open()
 		self.gps.WhenNewPosition = self.__OnNewGPSPosition
 		
@@ -50,13 +51,7 @@ class gateway(object):
 		self.rtty = RTTY(Frequency=RTTYFrequency)
 		self.rtty.listen_for_sentences(self.__rtty_sentence, self.__rtty_partial_sentence)
 	
-	# def __chase_thread(self):
-		# while 1:
-			# sleep(1)
-			# self.habitat.CarPosition = self.gps.Position()
-
 	def __OnNewGPSPosition(self, Position):
-		# print("gateway: Position = ", Position)
 		self.habitat.CarPosition = Position
 		if self.OnNewGPSPosition:
 			self.OnNewGPSPosition(Position)

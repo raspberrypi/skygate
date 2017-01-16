@@ -31,6 +31,7 @@ class SkyGate:
 		self.SelectedSSDVIndex = 0
 		self.LoRaFrequencyError = 999
 		self.CurrentGPSPosition = None
+		self.GPSDevice = '/dev/ttyAMA0'
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -85,20 +86,7 @@ class SkyGate:
 		
 		# Place dl-fldigi main window where we ant it (works OK, till we find a way of making it a child window)
 		PositionDlFldigi(self.windowMain)
-		
-		# Default settings
-		self.ReceiverCallsign = 'Python'
-		self.EnableLoRaUpload = True
-		
-		self.LoRaFrequency = 434.450
-		self.LoRaMode = 1
-		
-		self.RTTYFrequency = 434.250
-		
-		self.ChaseCarID = 'Python'
-		self.ChaseCarPeriod = 30
-		self.ChaseCarEnabled = True
-		
+				
 		# Read config file
 		self.ConfigFileName = 'skygate.ini'
 		self.LoadSettingsFromFile(self.ConfigFileName)
@@ -121,7 +109,11 @@ class SkyGate:
 								RTTYFrequency=self.RTTYFrequency,
 								OnNewGPSPosition=self._NewGPSPosition,
 								OnNewRTTYData=self._NewRTTYData, OnNewRTTYSentence=self._NewRTTYSentence,
-								OnNewLoRaSentence=self._NewLoRaSentence, OnNewLoRaSSDV=self._NewLoRaSSDV, OnLoRaFrequencyError=self._LoRaFrequencyError)
+								OnNewLoRaSentence=self._NewLoRaSentence, OnNewLoRaSSDV=self._NewLoRaSSDV, OnLoRaFrequencyError=self._LoRaFrequencyError,
+								GPSDevice=self.GPSDevice)
+		if not self.gateway.gps.IsOpen:
+			self.GPSScreen.AppendLine("Failed to open GPS device " + self.GPSDevice)
+
 		self.gateway.run()
 
 	def AdjustLoRaFrequency(self, Delta):
@@ -309,7 +301,6 @@ class SkyGate:
 		GLib.idle_add(self._UpdateLoRaSSDV)
 		
 	def _LoRaFrequencyError(self, FrequencyError):
-		print("C: FrequencyError =", FrequencyError)
 		self.LoRaFrequencyError = FrequencyError
 		GLib.idle_add(self._UpdateLoRaFrequencyError)
 			
@@ -331,18 +322,20 @@ class SkyGate:
 			# Open config file
 			config = configparser.RawConfigParser()   
 			config.read(FileName)
-								
-			self.ReceiverCallsign = config.get('Receiver', 'Callsign')
+
+			self.ReceiverCallsign = config.get('Receiver', 'Callsign', fallback='CHANGE_ME')
+
+			self.LoRaFrequency = float(config.get('LoRa', 'Frequency', fallback='434.450'))
+			self.LoRaMode = int(config.get('LoRa', 'Mode', fallback='1'))
+			self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload', fallback=False)
 			
-			self.LoRaFrequency = float(config.get('LoRa', 'Frequency'))
-			self.LoRaMode = int(config.get('LoRa', 'Mode'))
-			self.EnableLoRaUpload = config.getboolean('LoRa', 'EnableUpload')
+			self.RTTYFrequency = float(config.get('RTTY', 'Frequency', fallback='434.250'))
 			
-			self.RTTYFrequency = float(config.get('RTTY', 'Frequency'))
-			
-			self.ChaseCarID = config.get('ChaseCar', 'ID')
-			self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period'))
-			self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload')
+			self.ChaseCarID = config.get('ChaseCar', 'ID', fallback='CHANGE_ME')
+			self.ChaseCarPeriod = int(config.get('ChaseCar', 'Period', fallback='30'))
+			self.ChaseCarEnabled = config.getboolean('ChaseCar', 'EnableUpload', fallback=False)
+
+			self.GPSDevice = config.get('GPS', 'Device', fallback='/dev/ttyAMA0')
 
 	def ApplySettings(self):
 		# LoRa
@@ -359,11 +352,16 @@ class SkyGate:
 		
 		# Car
 		self.gateway.habitat.ChaseCarEnabled = self.ChaseCarEnabled
+		
+		# GPS
+		self.gateway.gps.SetDevice(self.GPSDevice)
+		if not self.gateway.gps.IsOpen:
+			self.GPSScreen.AppendLine("Failed to open GPS device " + self.GPSDevice)
 	
 	def SaveSettingsToFile(self, FileName):
 		config = configparser.RawConfigParser()   
 		config.read(FileName)
-							
+
 		if not config.has_section('Receiver'):
 			config.add_section('Receiver')
 		config.set('Receiver', 'Callsign', self.ReceiverCallsign)
@@ -384,6 +382,11 @@ class SkyGate:
 		config.set('ChaseCar', 'Period', self.ChaseCarPeriod)
 		config.set('ChaseCar', 'EnableUpload', BoolToStr(self.ChaseCarEnabled))
 		
+		if not config.has_section('GPS'):
+			config.add_section('GPS')
+		# if self.GPSDevice:
+		config.set('GPS', 'Device', self.GPSDevice)
+		
 		with open(FileName, 'wt') as configfile:
 			config.write(configfile)
 		
@@ -399,6 +402,8 @@ class SkyGate:
 		self.builder.get_object("textSettingsChaseCarID").set_text(self.ChaseCarID)
 		self.builder.get_object("textSettingsChaseCarPeriod").set_text(str(self.ChaseCarPeriod))
 		self.builder.get_object("chkEnableChaseCarUpload").set_active(self.ChaseCarEnabled)
+		
+		self.builder.get_object("textSettingsGPSDevice").set_text(self.GPSDevice)
 	
 	def LoadFromSettingsScreen(self):
 		self.ReceiverCallsign = self.builder.get_object("textSettingsReceiverCallsign").get_text()
@@ -412,6 +417,9 @@ class SkyGate:
 		self.ChaseCarID = self.builder.get_object("textSettingsChaseCarID").get_text()
 		self.ChaseCarPeriod = int(self.builder.get_object("textSettingsChaseCarPeriod").get_text())
 		self.ChaseCarEnabled = self.builder.get_object("chkEnableChaseCarUpload").get_active()
+		
+		self.GPSDevice = self.builder.get_object("textSettingsGPSDevice").get_text()
+
 		
 	def DecodeSentence(self, sentence):
 		# $BUZZ,483,10:04:27,51.95022,-2.54435,00190,5*6856

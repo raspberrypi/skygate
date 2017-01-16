@@ -100,43 +100,62 @@ class GPS(object):
 	"""
 	PortOpen = False
 	
-	def __init__(self):
+	def __init__(self, Device='/dev/ttyAMA0'):
 		self._WhenLockGained = None
 		self._WhenLockLost = None
+		self._WhenNewPosition = None
+		self.IsOpen = False
 		
 		# Serial port /dev/ttyAMA0
 		self.ser = serial.Serial()
 		self.ser.baudrate = 9600
 		self.ser.stopbits = 1
 		self.ser.bytesize = 8
-		self.ser.port = '/dev/ttyAMA0'
+		self.ser.port = Device
 	
 	def __gps_thread(self):
 		Line = ''
 
 		while True:
-			Byte = self.ser.read(1)
-			
-			Character = chr(Byte[0])
+			if self.IsOpen:
+				Byte = self.ser.read(1)
+				
+				Character = chr(Byte[0])
 
-			if Character == '$':
-				Line = Character
-			elif len(Line) > 90:
-				Line = ''
-			elif (Line != '') and (Character != '\r'):
-				Line = Line + Character
-				if Character == '\n':
-					ProcessLine(self, Line)
-					
+				if Character == '$':
+					Line = Character
+				elif len(Line) > 90:
 					Line = ''
-					time.sleep(0.1)
+				elif (Line != '') and (Character != '\r'):
+					Line = Line + Character
+					if Character == '\n':
+						ProcessLine(self, Line)
+						
+						Line = ''
+						time.sleep(0.1)
+			else:
+				time.sleep(1)
 
 	def open(self):
-		# Open connection to GPS 	
-		return self.ser.open()
+		# Open connection to GPS
+		try:
+			self.ser.open()
+			self.IsOpen = True
+		except:
+			self.IsOpen = False
 	
 	def Position(self):
 		return GPSPosition
+		
+	def SetDevice(self, device):
+		if device != self.ser.port:
+			self.ser.close()
+			self.ser.port = device
+			try:
+				self.ser.open()
+				self.IsOpen = True
+			except:
+				self.IsOpen = False
 			
 	@property
 	def WhenLockGained(self):
