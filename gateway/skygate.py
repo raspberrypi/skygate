@@ -11,6 +11,7 @@ from rttyscreen import *
 from gpsscreen import *
 from ssdvscreen import *
 import configparser
+
 	
 def PositionDlFldigi(window):
 	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(window.get_position()[0]+6) + ',' + str(window.get_position()[1]+250) + ',700,173')
