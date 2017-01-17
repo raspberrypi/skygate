@@ -13,10 +13,12 @@ from ssdvscreen import *
 import configparser
 
 	
+
 def PositionDlFldigi(window):
 	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(window.get_position()[0]+6) + ',' + str(window.get_position()[1]+250) + ',700,173')
 
-def ShowDlFldigi(Show):
+def ShowDlFldigi(Show, window):
+	PositionDlFldigi(window)
 	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
 
 class SkyGate:
@@ -84,7 +86,7 @@ class SkyGate:
 			
 		self.windowMain.show_all()
 		
-		# Place dl-fldigi main window where we ant it (works OK, till we find a way of making it a child window)
+		# Start rtl_fm and dl-fldigi for RTTY decoding
 		PositionDlFldigi(self.windowMain)
 				
 		# Read config file
@@ -136,7 +138,7 @@ class SkyGate:
 		
 	# Main window signals
 	def onDeleteWindow(self, *args):
-		ShowDlFldigi(False)
+		ShowDlFldigi(False, self.windowMain)
 		Gtk.main_quit(*args)
 		
 	def on_windowMain_check_resize(self, window):
@@ -315,7 +317,7 @@ class SkyGate:
 		
 		self.CurrentWindow.reparent(self.frameMain)
 		
-		ShowDlFldigi(SomeWindow == self.RTTYScreen.frame)
+		ShowDlFldigi(self.CurrentWindow == self.RTTYScreen.frame, self.windowMain)
 				
 	def LoadSettingsFromFile(self, FileName):
 		# Open config file
@@ -433,6 +435,8 @@ class SkyGate:
 			return None
 		
 	def ssdv_update_timer(self, *args):
+		ShowDlFldigi(self.CurrentWindow == self.RTTYScreen.frame, self.windowMain)
+		
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.SSDVScreen.frame:
 			self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, False)

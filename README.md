@@ -6,9 +6,7 @@ HAB receiver software for tracking LoRa and RTTY payloads, and uploading telemet
 Receiver
 ========
 
-This part of the software is Python 3.4.  It uses these Python libraries which can be installed with PIP:
-
-(need to check my notes to see if any need to be installed or if they were already installed)
+This software is in Python 3.4.  All Python libraries are already included in Jessie Pixel.
 
 It needs these install items:
 
@@ -17,13 +15,10 @@ sudo apt-get install wmctrl
 
 It also requires SSDV to be installed:
 
-cd
-
-git clone https://github.com/fsphil/ssdv.git
-
-cd ssdv
-
-sudo make install
+cd  
+git clone https://github.com/fsphil/ssdv.git  
+cd ssdv  
+sudo make install  
 
  
 Decoding RTTY
@@ -37,15 +32,11 @@ sudo apt-get install libjpeg9-dev libsamplerate0-dev libssl-dev gettext pavucont
 
 cd
 
-git clone git://github.com/ukhas/dl-fldigi.git
-
-cd dl-fldigi
-
-git checkout DL3.1
-
-git submodule init
-
-git submodule update
+git clone git://github.com/ukhas/dl-fldigi.git  
+cd dl-fldigi  
+git checkout DL3.1  
+git submodule init  
+git submodule update  
 
 vi src/Makefile.am
 
@@ -56,7 +47,6 @@ autoreconf -vfi
 ./configure --disable-flarq
 
 make
-
 sudo make install
 
 
@@ -67,23 +57,15 @@ Assuming use of an RTL_FM radio receiver, the RTL SDR software needs to be insta
 
 sudo apt-get install git cmake libusb-1.0-0-dev
 
-cd ~
-
-git clone https://github.com/daveake/rtl-sdr.git
-
-cd rtl-sdr
-
-mkdir build
-
-cd build
-
-cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON
-
-make
-
-sudo make install
-
-sudo ldconfig
+cd ~  
+git clone https://github.com/daveake/rtl-sdr.git  
+cd rtl-sdr  
+mkdir build  
+cd build  
+cmake ../ -DINSTALL_UDEV_RULES=ON -DDETACH_KERNEL_DRIVER=ON  
+make  
+sudo make install  
+sudo ldconfig  
 
 
 Raspbian Configuration
@@ -109,14 +91,21 @@ and remove the part that says console=serial0,115200
 Save your changes.
 
 
-Usage
-=====
+Usage (Autostart)
+=================
 
-The GPS program needs to be run (before or after the main tracker - makes no difference):
+Edit the following text file:
 
-cd
-cd skygate/gps
-sudo ./gps
+~/.config/lxsession/LXDE-pi/autostart
+
+and append these 2 lines:
+
+@/home/pi/skygate/gateway/start_gateway.sh  
+@/home/pi/skygate/gateway/start_rtty.sh
+
+
+Usage (Manual)
+==============
 
 Start pulseaudio with
 
@@ -126,7 +115,7 @@ Start the RTL SDR software with
 
 rtl_fm -M usb -f 434.253M -s 192000 -r 48000 - | aplay -r 48k -f S16_LE -t raw -c 1
 
-You should now hear sound through the Pi speaker.
+You should now hear sound (noise unless you tuned to a payload) through the Pi speaker.
 
 Start dl-fldigi with
 
@@ -143,6 +132,9 @@ Then configure dl-fldigi through its menus:
 Op Mode --> RTTY Custom --> Set 300 baud, 8 data bits, 2 stop bits, 830Hz shift
 
 (or, if not using SSDV) 50 baud, 7 data bits, 2 stop bits, 830Hz shift
+
+
+dl-fldigi includes an fldigi bug that causes it to sometimes fail on startup with an error code of 11.  Try again if this happens.
 
 
 The receiver program can be started manually from a terminal window in an X session with:
