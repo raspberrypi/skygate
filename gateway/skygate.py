@@ -80,7 +80,8 @@ class SkyGate:
 		self.windowMain.resize(min(ScreenWidth, 800), min(ScreenHeight, 480))
 		# If this is the official touchscreen or smaller, position at top-left
 		if (ScreenWidth <= 800) or (ScreenHeight <= 480):
-			self.windowMain.move(0,0)
+			# self.windowMain.move(0,0)
+			self.windowMain.fullscreen()	# maximize()
 		else:
 			self.windowMain.move(100,100)
 			
