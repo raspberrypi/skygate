@@ -56,18 +56,18 @@ class SkyGate:
 		self.SetNewWindow(self.frameDefault)
 		
 		# Main screen widgets - upper status bar
-		self.lblLoRaPayload = self.builder.get_object("lblLoRaPayload")
-		self.lblLoRaTime = self.builder.get_object("lblLoRaTime")
-		self.lblLoRaLat = self.builder.get_object("lblLoRaLat")
-		self.lblLoRaLon = self.builder.get_object("lblLoRaLon")
-		self.lblLoRaAlt = self.builder.get_object("lblLoRaAlt")
+		# self.lblLoRaPayload = self.builder.get_object("lblLoRaPayload")
+		# self.lblLoRaTime = self.builder.get_object("lblLoRaTime")
+		# self.lblLoRaLat = self.builder.get_object("lblLoRaLat")
+		# self.lblLoRaLon = self.builder.get_object("lblLoRaLon")
+		# self.lblLoRaAlt = self.builder.get_object("lblLoRaAlt")
 		
 		# Main screen widgets - lower status bar
-		self.lblTime = self.builder.get_object("lblTime")
-		self.lblLat = self.builder.get_object("lblLat")
-		self.lblLon = self.builder.get_object("lblLon")
-		self.lblAlt = self.builder.get_object("lblAlt")
-		self.lblSats = self.builder.get_object("lblSats")
+		# self.lblTime = self.builder.get_object("lblTime")
+		# self.lblLat = self.builder.get_object("lblLat")
+		# self.lblLon = self.builder.get_object("lblLon")
+		# self.lblAlt = self.builder.get_object("lblAlt")
+		# self.lblSats = self.builder.get_object("lblSats")
 		
 		# Settings screen
 		# This presently is done as-required
@@ -80,8 +80,7 @@ class SkyGate:
 		self.windowMain.resize(min(ScreenWidth, 800), min(ScreenHeight, 480))
 		# If this is the official touchscreen or smaller, position at top-left
 		if (ScreenWidth <= 800) or (ScreenHeight <= 480):
-			# self.windowMain.move(0,0)
-			self.windowMain.fullscreen()	# maximize()
+			self.windowMain.move(0,0)
 		else:
 			self.windowMain.move(100,100)
 			
@@ -213,11 +212,11 @@ class SkyGate:
 		Position = self.CurrentGPSPosition
 
 		# Lower status bar
-		self.lblTime.set_text(Position['time'])
-		self.lblLat.set_text("{0:.5f}".format(Position['lat']))
-		self.lblLon.set_text("{0:.5f}".format(Position['lon']))
-		self.lblAlt.set_text(str(int(Position['alt'])) + ' m')
-		self.lblSats.set_text(str(Position['sats']) + ' Sats')
+		# self.lblTime.set_text(Position['time'])
+		# self.lblLat.set_text("{0:.5f}".format(Position['lat']))
+		# self.lblLon.set_text("{0:.5f}".format(Position['lon']))
+		# self.lblAlt.set_text(str(int(Position['alt'])) + ' m')
+		# self.lblSats.set_text(str(Position['sats']) + ' Sats')
 		
 		# GPS screen
 		Line = Position['time'] + ': lat=' + "{0:.5f}".format(Position['lat']) + ', lone=' + "{0:.5f}".format(Position['lon']) + ', alt=' + str(int(Position['alt'])) + ', sats=' + str(Position['sats'])
