@@ -11,6 +11,7 @@ from rttyscreen import *
 from gpsscreen import *
 from ssdvscreen import *
 import configparser
+import datetime
 
 	
 
@@ -19,6 +20,7 @@ def PositionDlFldigi(window):
 
 def ShowDlFldigi(Show, window):
 	PositionDlFldigi(window)
+	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
 	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
 
 class SkyGate:
@@ -94,11 +96,7 @@ class SkyGate:
 		self.LoadSettingsFromFile(self.ConfigFileName)
 		
 		# Show current settings
-		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
-		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
-
 		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
-
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
 		# Timer for updating UI
@@ -124,7 +122,6 @@ class SkyGate:
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 		
 		# Update screens
-		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 
 	def AdjustRTTYFrequency(self, Delta):
@@ -133,7 +130,6 @@ class SkyGate:
 		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
 		
 		# Update screens
-		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
 	# Main window signals
@@ -222,6 +218,9 @@ class SkyGate:
 		Line = Position['time'] + ': lat=' + "{0:.5f}".format(Position['lat']) + ', lone=' + "{0:.5f}".format(Position['lon']) + ', alt=' + str(int(Position['alt'])) + ', sats=' + str(Position['sats'])
 		self.GPSScreen.AppendLine(Line)
 		
+		# HAB screen
+		self.HABScreen.NewGPSPosition(Position)
+		
 		return False	# So we don't get called again, until there's a new GPS position
 	
 	def _UpdateCurrentRTTY(self):
@@ -231,14 +230,14 @@ class SkyGate:
 		
 	def _UpdateRTTYSentence(self):	
 		# Update main screen header
-		self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
-		self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
-		self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
-		self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
-		self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
+		# self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
+		# self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
+		# self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
+		# self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
+		# self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
 	
 		# Update HAB screen
-		self.HABScreen.ShowRTTYValues(self.LatestRTTYValues, self.gateway.gps.Position())
+		self.HABScreen.NewRTTYValues(self.LatestRTTYValues)
 
 		# Update RTTY screen
 		self.RTTYScreen.AppendLine(str(self.LatestRTTYSentence + '\n'))
@@ -247,14 +246,14 @@ class SkyGate:
 
 	def _UpdateLoRaSentence(self):
 		# Update main screen header
-		self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
-		self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
-		self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
-		self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
-		self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
+		# self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
+		# self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
+		# self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
+		# self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
+		# self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
 			
 		# Update HAB screen
-		self.HABScreen.ShowLoRaValues(self.LatestLoRaValues, self.gateway.gps.Position())
+		self.HABScreen.NewLoRaValues(self.LatestLoRaValues)
 
 		# Update LoRa screen
 		self.LoRaScreen.AppendLine(str(self.LatestLoRaSentence))
@@ -342,13 +341,11 @@ class SkyGate:
 		# LoRa
 		self.gateway.lora.SetLoRaFrequency(self.LoRaFrequency)
 		self.gateway.lora.SetStandardLoRaParameters(self.LoRaMode)
-		self.HABScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.gateway.EnableLoRaUpload = self.EnableLoRaUpload
 		
 		# RTTY
 		self.gateway.rtty.SetFrequency(self.RTTYFrequency)
-		self.HABScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 		
 		# Car
@@ -429,8 +426,10 @@ class SkyGate:
 			
 			payload = list[0].split("$")
 			payload = payload[len(payload)-1]
+			
+			TimeStamp = datetime.datetime.strptime(list[2], '%H:%M:%S')
 
-			return {'payload': payload, 'time': list[2], 'lat': float(list[3]), 'lon': float(list[4]), 'alt': float(list[5])}
+			return {'payload': payload, 'time': TimeStamp, 'lat': float(list[3]), 'lon': float(list[4]), 'alt': float(list[5])}
 		except:
 			return None
 		

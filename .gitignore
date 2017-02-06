@@ -1,6 +1,7 @@
 *.jpg
 *.bin
 *.o
+*.glade~
 gps/gps
 __pycache__
 images
