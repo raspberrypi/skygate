@@ -16,6 +16,7 @@ class HABScreen(object):
 		self.btnLoRa = builder.get_object("btnHABLoRa")
 		self.btnRTTY = builder.get_object("btnHABRTTY")
 		
+		self.lblHABPayload = builder.get_object("lblHABPayload")
 		self.lblHABRate = builder.get_object("lblHABRate")
 		
 		self.lblHABDistance = builder.get_object("lblHABDistance")
@@ -26,6 +27,9 @@ class HABScreen(object):
 		self.lblHABLatitude = builder.get_object("lblHABLatitude")
 		self.lblHABLongitude = builder.get_object("lblHABLongitude")
 		self.lblHABAltitude = builder.get_object("lblHABAltitude")
+		
+	def RadioButtonsChanged(self):
+		self.ShowLatestValues()
 		
 	def LatestHABValues(self):
 		if self.btnAuto.get_active():
@@ -56,6 +60,7 @@ class HABScreen(object):
 	def ShowLatestValues(self):
 		HABPosition = self.LatestHABValues()
 		if HABPosition:
+			self.lblHABPayload.set_text(HABPosition['payload'])
 			self.lblHABRate.set_text("{0:.1f}".format(HABPosition['rate']) + 'm/s')
 			self.lblHABTime.set_text(HABPosition['time'].strftime('%H:%M:%S'))
 			self.lblHABLatitude.set_text("{0:.5f}".format(HABPosition['lat']))
@@ -63,6 +68,7 @@ class HABScreen(object):
 			self.lblHABAltitude.set_text(str(HABPosition['alt']) + 'm')
 			self.ShowDistanceAndDirection(HABPosition, self.GPSPosition)
 		else:
+			self.lblHABPayload.set_text('')
 			self.lblHABRate.set_text('')
 			self.lblHABTime.set_text('')
 			self.lblHABLatitude.set_text('')

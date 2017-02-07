@@ -166,7 +166,11 @@ class SkyGate:
 		ScrolledWindow = args[0]
 		adj = ScrolledWindow.get_vadjustment()
 		adj.set_value(adj.get_upper() - adj.get_page_size())		
-		
+	
+	# HAB window signals
+	def on_btnHABAuto_toggled(self, button):
+		self.HABScreen.RadioButtonsChanged()
+	
 	# LoRa window signals
 	def on_btnLoRaDown_clicked(self, button):
 		self.AdjustLoRaFrequency(-0.001)
