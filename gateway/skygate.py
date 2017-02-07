@@ -15,14 +15,6 @@ import datetime
 
 	
 
-def PositionDlFldigi(window):
-	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(window.get_position()[0]+6) + ',' + str(window.get_position()[1]+250) + ',700,173')
-
-def ShowDlFldigi(Show, window):
-	PositionDlFldigi(window)
-	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
-	os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
-
 class SkyGate:
 	def __init__(self):
 		self.CurrentWindow = None
@@ -56,7 +48,7 @@ class SkyGate:
 
 		# Show default window
 		self.SetNewWindow(self.frameDefault)
-		
+
 		# Main screen widgets - upper status bar
 		# self.lblLoRaPayload = self.builder.get_object("lblLoRaPayload")
 		# self.lblLoRaTime = self.builder.get_object("lblLoRaTime")
@@ -87,10 +79,9 @@ class SkyGate:
 			self.windowMain.move(100,100)
 			
 		self.windowMain.show_all()
-		
-		# Start rtl_fm and dl-fldigi for RTTY decoding
-		PositionDlFldigi(self.windowMain)
 				
+		self.PositionDlFldigi()
+		
 		# Read config file
 		self.ConfigFileName = 'skygate.ini'
 		self.LoadSettingsFromFile(self.ConfigFileName)
@@ -98,7 +89,7 @@ class SkyGate:
 		# Show current settings
 		self.LoRaScreen.ShowLoRaFrequencyAndMode(self.LoRaFrequency, self.LoRaMode)
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
-		
+				
 		# Timer for updating UI
 		GObject.timeout_add_seconds(5, self.ssdv_update_timer)
 
@@ -111,8 +102,10 @@ class SkyGate:
 								OnNewRTTYData=self._NewRTTYData, OnNewRTTYSentence=self._NewRTTYSentence,
 								OnNewLoRaSentence=self._NewLoRaSentence, OnNewLoRaSSDV=self._NewLoRaSSDV, OnLoRaFrequencyError=self._LoRaFrequencyError,
 								GPSDevice=self.GPSDevice)
-		if not self.gateway.gps.IsOpen:
-			self.GPSScreen.AppendLine("Failed to open GPS device " + self.GPSDevice)
+		if self.gateway.gps.IsOpen:
+			self.GPSScreen.ShowPortStatus("OK")
+		else:
+			self.GPSScreen.ShowPortStatus("Failed to open GPS device " + self.GPSDevice)
 
 		self.gateway.run()
 
@@ -134,11 +127,11 @@ class SkyGate:
 		
 	# Main window signals
 	def onDeleteWindow(self, *args):
-		ShowDlFldigi(False, self.windowMain)
+		self.ShowDlFldigi(False)
 		Gtk.main_quit(*args)
 		
 	def on_windowMain_check_resize(self, window):
-		PositionDlFldigi(window)
+		pass
 
 	# Main window button signals
 	def on_buttonHAB_clicked(self, button):
@@ -184,6 +177,13 @@ class SkyGate:
 
 	def on_btnRTTYUp_clicked(self, button):
 		self.AdjustRTTYFrequency(0.0005)
+
+	def on_btnRTTYdlfldigi_clicked(self, button):
+		self.PositionDlFldigi()
+		self.ShowDlFldigi(True)
+		
+	def on_textRTTY_button_press_event(self, thing1, thing2):
+		self.ShowDlFldigi(False)
 		
 	# GPS window signals
 	# (none)
@@ -219,17 +219,23 @@ class SkyGate:
 		# self.lblSats.set_text(str(Position['sats']) + ' Sats')
 		
 		# GPS screen
-		Line = Position['time'] + ': lat=' + "{0:.5f}".format(Position['lat']) + ', lone=' + "{0:.5f}".format(Position['lon']) + ', alt=' + str(int(Position['alt'])) + ', sats=' + str(Position['sats'])
-		self.GPSScreen.AppendLine(Line)
+		self.GPSScreen.ShowPosition(Position)
 		
 		# HAB screen
 		self.HABScreen.NewGPSPosition(Position)
 		
 		return False	# So we don't get called again, until there's a new GPS position
 	
+	def PositionDlFldigi(self):
+		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(self.windowMain.get_position()[0]+6) + ',' + str(self.windowMain.get_position()[1]+270) + ',700,173')
+
+	def ShowDlFldigi(self, Show):
+		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
+		if Show:
+			os.system('wmctrl -a "dl-fldigi - waterfall-only mode"')
+
 	def _UpdateCurrentRTTY(self):
-		self.RTTYScreen.ShowCurrentRTTY(self.CurrentRTTY[-80:])
-		
+		self.RTTYScreen.ShowCurrentRTTY(self.CurrentRTTY[-80:])	
 		return False
 		
 	def _UpdateRTTYSentence(self):	
@@ -312,6 +318,8 @@ class SkyGate:
 	# Functions
 	
 	def SetNewWindow(self, SomeWindow):
+		self.ShowDlFldigi(False)
+		
 		if self.CurrentWindow:
 			self.CurrentWindow.reparent(self.CurrentParent)
 			
@@ -320,8 +328,6 @@ class SkyGate:
 		
 		self.CurrentWindow.reparent(self.frameMain)
 		
-		ShowDlFldigi(self.CurrentWindow == self.RTTYScreen.frame, self.windowMain)
-				
 	def LoadSettingsFromFile(self, FileName):
 		# Open config file
 		config = configparser.RawConfigParser()   
@@ -357,8 +363,10 @@ class SkyGate:
 		
 		# GPS
 		self.gateway.gps.SetDevice(self.GPSDevice)
-		if not self.gateway.gps.IsOpen:
-			self.GPSScreen.AppendLine("Failed to open GPS device " + self.GPSDevice)
+		if self.gateway.gps.IsOpen:
+			self.GPSScreen.ShowPortStatus("OK")
+		else:
+			self.GPSScreen.ShowPortStatus("Failed to open GPS device " + self.GPSDevice)
 	
 	def SaveSettingsToFile(self, FileName):
 		config = configparser.RawConfigParser()   
@@ -438,8 +446,6 @@ class SkyGate:
 			return None
 		
 	def ssdv_update_timer(self, *args):
-		ShowDlFldigi(self.CurrentWindow == self.RTTYScreen.frame, self.windowMain)
-		
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.SSDVScreen.frame:
 			self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, False)

@@ -11,6 +11,7 @@ class HABScreen(object):
 		self.PreviousLoRaValues = None
 		self.PreviousRTTYValues = None
 		self.GPSPosition = None
+		self.ShowBalloon = True
 		
 		self.btnAuto = builder.get_object("btnHABAuto")
 		self.btnLoRa = builder.get_object("btnHABLoRa")
@@ -18,6 +19,8 @@ class HABScreen(object):
 		
 		self.lblHABPayload = builder.get_object("lblHABPayload")
 		self.lblHABRate = builder.get_object("lblHABRate")
+		self.imgHABBalloon = builder.get_object("imgHABBalloon")
+		self.imgHABChute = builder.get_object("imgHABChute")
 		
 		self.lblHABDistance = builder.get_object("lblHABDistance")
 		self.imgHABBall = builder.get_object("imgHABBall")
@@ -39,7 +42,7 @@ class HABScreen(object):
 				return self.LatestLoRaValues
 			if self.LatestLoRaValues['time'] > self.LatestRTTYValues['time']:
 				return self.LatestLoRaValues
-			return self.LatestRTTValues
+			return self.LatestRTTYValues
 		elif self.btnLoRa.get_active():
 			return self.LatestLoRaValues
 		else:
@@ -48,25 +51,29 @@ class HABScreen(object):
 			
 	def ShowDistanceAndDirection(self, HABPosition, GPSPosition):
 		if HABPosition and GPSPosition:
-			try:
+			# try:
 				DistanceToHAB = CalculateDistance(HABPosition['lat'], HABPosition['lon'], GPSPosition['lat'], GPSPosition['lon'])
 				DirectionToHAB = CalculateDirection(HABPosition['lat'], HABPosition['lon'], GPSPosition['lat'], GPSPosition['lon'])
 																				
 				self.fixedHABCompass.move(self.imgHABBall, 150 + 131 * math.sin(math.radians(DirectionToHAB)), 134 + 131 * math.cos(math.radians(DirectionToHAB)))
 				self.lblHABDistance.set_text("%.3f" % (DistanceToHAB/1000) + " km")
-			finally:
-				pass
+			#finally:
+			#	pass
 
 	def ShowLatestValues(self):
 		HABPosition = self.LatestHABValues()
 		if HABPosition:
 			self.lblHABPayload.set_text(HABPosition['payload'])
-			self.lblHABRate.set_text("{0:.1f}".format(HABPosition['rate']) + 'm/s')
+			self.lblHABRate.set_text("{0:.1f}".format(HABPosition['rate']))
 			self.lblHABTime.set_text(HABPosition['time'].strftime('%H:%M:%S'))
 			self.lblHABLatitude.set_text("{0:.5f}".format(HABPosition['lat']))
 			self.lblHABLongitude.set_text("{0:.5f}".format(HABPosition['lon']))
 			self.lblHABAltitude.set_text(str(HABPosition['alt']) + 'm')
 			self.ShowDistanceAndDirection(HABPosition, self.GPSPosition)
+			if (HABPosition['rate'] >= -1) != self.ShowBalloon:
+				self.ShowBalloon = not self.ShowBalloon
+				self.imgHABBalloon.set_visible(self.ShowBalloon)
+				self.imgHABChute.set_visible(not self.ShowBalloon)
 		else:
 			self.lblHABPayload.set_text('')
 			self.lblHABRate.set_text('')
@@ -76,13 +83,11 @@ class HABScreen(object):
 			self.lblHABAltitude.set_text('')
 			self.fixedHABCompass.move(self.imgHABBall, 150, 134)
 			self.lblHABDistance.set_text("")
-		pass
 		
 	def CalculateRate(self, Latest, Previous):
 		if Latest and Previous:
 			if Latest['time'] > Previous['time']:
-				return (Latest['alt'] - Previous['alt']) / (Latest['time'] - Previous['time']).seconds
-				
+				return (Latest['alt'] - Previous['alt']) / (Latest['time'] - Previous['time']).seconds			
 		return 0
 	
 	def NewLoRaValues(self, LatestLoRaValues):
@@ -91,7 +96,7 @@ class HABScreen(object):
 		self.LatestLoRaValues = LatestLoRaValues
 		self.ShowLatestValues()
 	
-	def ShowRTTYValues(self, LatestRTTYValues):
+	def NewRTTYValues(self, LatestRTTYValues):
 		self.PreviousRTTYValues = self.LatestRTTYValues
 		LatestRTTYValues['rate'] = self.CalculateRate(self.LatestRTTYValues, self.PreviousRTTYValues)
 		self.LatestRTTYValues = LatestRTTYValues
