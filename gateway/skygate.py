@@ -318,14 +318,22 @@ class SkyGate:
 	# Functions
 	
 	def SetNewWindow(self, SomeWindow):
+		# Hide dl-fldigi in case it's been brought up on top of us
 		self.ShowDlFldigi(False)
 		
+		# Send existing screen back to mummy
 		if self.CurrentWindow:
 			self.CurrentWindow.reparent(self.CurrentParent)
+		
+		# Swap back to initial screen if user taps the same button again
+		if SomeWindow == self.CurrentWindow:
+			SomeWindow = self.frameDefault
 			
+		# Get parent so we can return window after use
 		self.CurrentParent = SomeWindow.get_parent()
 		self.CurrentWindow = SomeWindow
-		
+
+		# Load window as requested
 		self.CurrentWindow.reparent(self.frameMain)
 		
 	def LoadSettingsFromFile(self, FileName):
