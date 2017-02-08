@@ -37,15 +37,17 @@ class SkyGate:
 		self.frameMain = self.builder.get_object("frameMain")
 		self.frameDefault = self.builder.get_object("frameDefault")
 
+		# Stop windows from getting too large and expanding main window
+		# self.windowMain.set_resizable(False)
+		
 		# Selectable screens
 		self.HABScreen = HABScreen(self.builder)
 		self.LoRaScreen = LoRaScreen(self.builder)
 		self.RTTYScreen = RTTYScreen(self.builder)
 		self.GPSScreen = GPSScreen(self.builder)
 		self.SSDVScreen = SSDVScreen(self.builder)
-		
 		self.frameSettings = self.builder.get_object("frameSettings")
-
+		
 		# Show default window
 		self.SetNewWindow(self.frameDefault)
 
@@ -71,7 +73,7 @@ class SkyGate:
 		ScreenWidth = ScreenInfo.get_width()
 		ScreenHeight = ScreenInfo.get_height()
 		# Set to size of official display, or available space, whichever is smaller
-		self.windowMain.resize(min(ScreenWidth, 800), min(ScreenHeight, 480))
+		self.windowMain.resize(min(ScreenWidth, 800), min(ScreenHeight, 414))
 		# If this is the official touchscreen or smaller, position at top-left
 		if (ScreenWidth <= 800) or (ScreenHeight <= 480):
 			self.windowMain.move(0,0)
@@ -335,7 +337,7 @@ class SkyGate:
 
 		# Load window as requested
 		self.CurrentWindow.reparent(self.frameMain)
-		
+				
 	def LoadSettingsFromFile(self, FileName):
 		# Open config file
 		config = configparser.RawConfigParser()   

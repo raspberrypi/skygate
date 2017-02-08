@@ -72,8 +72,8 @@ class HABScreen(object):
 			self.ShowDistanceAndDirection(HABPosition, self.GPSPosition)
 			if (HABPosition['rate'] >= -1) != self.ShowBalloon:
 				self.ShowBalloon = not self.ShowBalloon
-				self.imgHABBalloon.set_visible(self.ShowBalloon)
-				self.imgHABChute.set_visible(not self.ShowBalloon)
+				# self.imgHABBalloon.set_visible(self.ShowBalloon)
+				# self.imgHABChute.set_visible(not self.ShowBalloon)
 		else:
 			self.lblHABPayload.set_text('')
 			self.lblHABRate.set_text('')

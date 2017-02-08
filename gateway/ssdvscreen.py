@@ -53,7 +53,7 @@ class SSDVScreen(object):
 			if Always or (FileName != self.DisplayedSSDVFileName) or (ModificationDate != self.SSDVModificationDate):
 				# self.imageSSDV.set_from_file(FileName)
 				pixbuf = GdkPixbuf.Pixbuf.new_from_file(FileName)
-				pixbuf = pixbuf.scale_simple(552, 414, GdkPixbuf.InterpType.BILINEAR)
+				pixbuf = pixbuf.scale_simple(506, 380, GdkPixbuf.InterpType.BILINEAR)
 				self.imageSSDV.set_from_pixbuf(pixbuf)
 
 				ImageInfo = self.ExtractImageInfoFromFileName(FileName)

@@ -26,10 +26,10 @@ class LoRaScreen(object):
 											 '		You may need to tune as far as 5kHz away from the transmitter frequency before it works.',
 											 '',
 											 '		Once you are receiving data, adjust to reduce the displayed error to 1kHz or less',
-											 ''], '', 18)
+											 ''], '', 15)
 	
 	def AppendLine(self, Line):
-		self.Log = UpdateLog(self.textLoRa, self.Log, Line, 18)
+		self.Log = UpdateLog(self.textLoRa, self.Log, Line, 15)
 		
 	def ShowLoRaFrequencyAndMode(self, LoRaFrequency, LoRaMode):
 		self.lblLoRaFrequency.set_text("{0:.3f}".format(LoRaFrequency) + ' MHz, Mode ' + str(LoRaMode))
