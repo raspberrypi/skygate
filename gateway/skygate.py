@@ -12,7 +12,7 @@ from gpsscreen import *
 from ssdvscreen import *
 import configparser
 import datetime
-
+import string
 	
 
 class SkyGate:
@@ -28,6 +28,7 @@ class SkyGate:
 		self.SelectedSSDVIndex = 0
 		self.LoRaFrequencyError = 0
 		self.CurrentGPSPosition = None
+		self.SettingsEditBox = None
 		
 		self.builder = Gtk.Builder()
 		self.builder.add_from_file("skygate.glade")
@@ -155,6 +156,7 @@ class SkyGate:
 		
 	def on_buttonSettings_clicked(self, button):
 		self.PopulateSettingsScreen()
+		self.SetKeyboardCase(False)
 		self.SetNewWindow(self.frameSettings)
 		
 	def on_AutoScroll(self, *args):
@@ -186,8 +188,8 @@ class SkyGate:
 		
 	def on_textRTTY_button_press_event(self, thing1, thing2):
 		self.ShowDlFldigi(False)
-		
 	# GPS window signals
+		
 	# (none)
 	
 	# SSDV window signals
@@ -209,17 +211,24 @@ class SkyGate:
 	def on_btnSettingsCancel_clicked(self, button):
 		self.PopulateSettingsScreen()
 	
+	def on_textSettings_focus(self, textbox, event):
+		self.SettingsEditBox = textbox
+	
+	def on_button1_clicked(self, button):
+		if self.SettingsEditBox:
+			if button.get_label() == '<-':		
+				self.SettingsEditBox.set_text(self.SettingsEditBox.get_text()[:-1])
+			else:
+				self.SettingsEditBox.set_text(self.SettingsEditBox.get_text() + button.get_label())
+				
+	def on_btnShift_clicked(self, button):
+		ToUpper = self.builder.get_object("buttonQ").get_label() == 'q'
+		self.SetKeyboardCase(ToUpper)
+		
 	# Gtk UI updaters
 	def _UpdateGPSPosition(self):
 		Position = self.CurrentGPSPosition
 
-		# Lower status bar
-		# self.lblTime.set_text(Position['time'])
-		# self.lblLat.set_text("{0:.5f}".format(Position['lat']))
-		# self.lblLon.set_text("{0:.5f}".format(Position['lon']))
-		# self.lblAlt.set_text(str(int(Position['alt'])) + ' m')
-		# self.lblSats.set_text(str(Position['sats']) + ' Sats')
-		
 		# GPS screen
 		self.GPSScreen.ShowPosition(Position)
 		
@@ -229,7 +238,7 @@ class SkyGate:
 		return False	# So we don't get called again, until there's a new GPS position
 	
 	def PositionDlFldigi(self):
-		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(self.windowMain.get_position()[0]+6) + ',' + str(self.windowMain.get_position()[1]+270) + ',700,173')
+		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(self.windowMain.get_position()[0]+46) + ',' + str(self.windowMain.get_position()[1]+150) + ',700,173')
 
 	def ShowDlFldigi(self, Show):
 		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
@@ -241,13 +250,6 @@ class SkyGate:
 		return False
 		
 	def _UpdateRTTYSentence(self):	
-		# Update main screen header
-		# self.lblLoRaPayload.set_text(self.LatestRTTYValues['payload'])
-		# self.lblLoRaTime.set_text(self.LatestRTTYValues['time'])
-		# self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestRTTYValues['lat']))
-		# self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestRTTYValues['lon']))
-		# self.lblLoRaAlt.set_text(str(self.LatestRTTYValues['alt']) + 'm')
-	
 		# Update HAB screen
 		self.HABScreen.NewRTTYValues(self.LatestRTTYValues)
 
@@ -256,14 +258,7 @@ class SkyGate:
 	
 		return False
 
-	def _UpdateLoRaSentence(self):
-		# Update main screen header
-		# self.lblLoRaPayload.set_text(self.LatestLoRaValues['payload'])
-		# self.lblLoRaTime.set_text(self.LatestLoRaValues['time'])
-		# self.lblLoRaLat.set_text("{0:.5f}".format(self.LatestLoRaValues['lat']))
-		# self.lblLoRaLon.set_text("{0:.5f}".format(self.LatestLoRaValues['lon']))
-		# self.lblLoRaAlt.set_text(str(self.LatestLoRaValues['alt']) + 'm')
-			
+	def _UpdateLoRaSentence(self):		
 		# Update HAB screen
 		self.HABScreen.NewLoRaValues(self.LatestLoRaValues)
 
@@ -440,6 +435,10 @@ class SkyGate:
 		
 		self.GPSDevice = self.builder.get_object("textSettingsGPSDevice").get_text()
 
+	def SetKeyboardCase(self, ToUpper):
+		for character in string.ascii_uppercase:
+			button = self.builder.get_object("button" + character)
+			button.set_label(character if ToUpper else character.lower())
 		
 	def DecodeSentence(self, sentence):
 		# $BUZZ,483,10:04:27,51.95022,-2.54435,00190,5*6856
