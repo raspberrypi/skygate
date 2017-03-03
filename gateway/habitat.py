@@ -16,8 +16,6 @@ def ConvertTimeForHabitat(GPSTime):
 
 class habitat(object):
 	"""
-	Gets position from UBlox GPS receiver, using external program for s/w i2c to GPIO pins
-	Provides callbacks on change of state (e.g. lock attained, lock lost)
 	"""
 	PortOpen = False
 	

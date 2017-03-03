@@ -94,7 +94,7 @@ class SkyGate:
 		self.RTTYScreen.ShowRTTYFrequency(self.RTTYFrequency)
 				
 		# Timer for updating UI
-		GObject.timeout_add_seconds(5, self.ssdv_update_timer)
+		GObject.timeout_add_seconds(1, self.ssdv_update_timer)
 
 		# Gateway
 		self.gateway = gateway(CarID=self.ChaseCarID, CarPeriod=30, CarEnabled=self.ChaseCarEnabled,
@@ -458,6 +458,8 @@ class SkyGate:
 		# Only update the image on the SSDV window if it's being displayed
 		if self.CurrentWindow == self.SSDVScreen.frame:
 			self.SSDVScreen.ShowFile(self.SelectedSSDVIndex, False)
+			
+		self.HABScreen.ShowTimeSinceData()
 			
 		return True	# Run again
 

@@ -1,5 +1,6 @@
 import gi
 from misc import *
+from datetime import datetime
 
 class HABScreen(object):
 	
@@ -12,6 +13,9 @@ class HABScreen(object):
 		self.PreviousRTTYValues = None
 		self.GPSPosition = None
 		self.ShowBalloon = True
+		
+		self.MaximumAltitude = 0
+		self.LastPositionAt = None
 		
 		self.btnAuto = builder.get_object("btnHABAuto")
 		self.btnLoRa = builder.get_object("btnHABLoRa")
@@ -30,6 +34,14 @@ class HABScreen(object):
 		self.lblHABLatitude = builder.get_object("lblHABLatitude")
 		self.lblHABLongitude = builder.get_object("lblHABLongitude")
 		self.lblHABAltitude = builder.get_object("lblHABAltitude")
+		self.lblHABMaxAltitude = builder.get_object("lblHABMaxAltitude")
+		
+		self.lblHABTimeSince = builder.get_object("lblHABTimeSince")
+	
+	def ShowTimeSinceData(self):
+		if self.LastPositionAt:
+			self.lblHABTimeSince.set_text(str(round((datetime.utcnow() - self.LastPositionAt).total_seconds())) + ' s')
+
 		
 	def RadioButtonsChanged(self):
 		self.ShowLatestValues()
@@ -68,7 +80,9 @@ class HABScreen(object):
 			self.lblHABTime.set_text(HABPosition['time'].strftime('%H:%M:%S'))
 			self.lblHABLatitude.set_text("{0:.5f}".format(HABPosition['lat']))
 			self.lblHABLongitude.set_text("{0:.5f}".format(HABPosition['lon']))
-			self.lblHABAltitude.set_text(str(HABPosition['alt']) + 'm')
+			self.lblHABAltitude.set_text(str(round(HABPosition['alt'])) + 'm')
+			self.MaximumAltitude = max(self.MaximumAltitude, round(HABPosition['alt']))
+			self.lblHABMaxAltitude.set_text(str(self.MaximumAltitude) + 'm')
 			self.ShowDistanceAndDirection(HABPosition, self.GPSPosition)
 			if (HABPosition['rate'] >= -1) != self.ShowBalloon:
 				self.ShowBalloon = not self.ShowBalloon
@@ -94,12 +108,16 @@ class HABScreen(object):
 		self.PreviousLoRaValues = self.LatestLoRaValues
 		LatestLoRaValues['rate'] = self.CalculateRate(self.LatestLoRaValues, self.PreviousLoRaValues)
 		self.LatestLoRaValues = LatestLoRaValues
+		self.LastPositionAt	= datetime.utcnow()
+		self.lblHABTimeSince.set_text('0 s')
 		self.ShowLatestValues()
 	
 	def NewRTTYValues(self, LatestRTTYValues):
 		self.PreviousRTTYValues = self.LatestRTTYValues
 		LatestRTTYValues['rate'] = self.CalculateRate(self.LatestRTTYValues, self.PreviousRTTYValues)
 		self.LatestRTTYValues = LatestRTTYValues
+		self.LastPositionAt	= datetime.utcnow()
+		self.lblHABTimeSince.set_text('0 s')
 		self.ShowLatestValues()
 		
 	def NewGPSPosition(self, GPSPosition):

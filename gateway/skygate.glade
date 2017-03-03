@@ -55,11 +55,13 @@
               <object class="GtkLabel" id="label6">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
-                <property name="label" translatable="yes">The &lt;b&gt;HAB&lt;/b&gt; screen shows the current payload position,
-plus distance and direction from you to it.</property>
+                <property name="label" translatable="yes">The &lt;b&gt;HAB&lt;/b&gt; screen shows the current payload position
+plus distance and direction from you to it</property>
                 <property name="use_markup">True</property>
-                <property name="justify">center</property>
+                <property name="justify">right</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -70,9 +72,11 @@ plus distance and direction from you to it.</property>
               <object class="GtkLabel" id="label12">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">The &lt;b&gt;SSDV&lt;/b&gt; (Slow Scan Digital Video) screen shows
-the payload photographs as they are received,</property>
+the payload photographs as they are received</property>
                 <property name="use_markup">True</property>
                 <property name="justify">right</property>
               </object>
@@ -85,12 +89,14 @@ the payload photographs as they are received,</property>
               <object class="GtkLabel" id="label14">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">The &lt;b&gt;LoRa&lt;/b&gt; screen allows you to tune in to the
 LoRa (LOng RAnge modem) transmissions
-and to see the raw data.</property>
+and to see the raw data</property>
                 <property name="use_markup">True</property>
-                <property name="justify">center</property>
+                <property name="justify">right</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -101,12 +107,14 @@ and to see the raw data.</property>
               <object class="GtkLabel" id="label17">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">The &lt;b&gt;RTTY&lt;/b&gt; screen allows you to tune in to the
 RTTY (Radio TeleTYpe) transmissions
-and to see the raw data.</property>
+and to see the raw data</property>
                 <property name="use_markup">True</property>
-                <property name="justify">center</property>
+                <property name="justify">right</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -117,10 +125,12 @@ and to see the raw data.</property>
               <object class="GtkLabel" id="label18">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
-                <property name="label" translatable="yes">The &lt;b&gt;GPS&lt;/b&gt; screen shows your current location.</property>
+                <property name="label" translatable="yes">The &lt;b&gt;GPS&lt;/b&gt; screen shows your current location</property>
                 <property name="use_markup">True</property>
-                <property name="justify">center</property>
+                <property name="justify">right</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -131,11 +141,13 @@ and to see the raw data.</property>
               <object class="GtkLabel" id="label19">
                 <property name="visible">True</property>
                 <property name="can_focus">False</property>
+                <property name="halign">end</property>
+                <property name="margin_right">32</property>
                 <property name="hexpand">True</property>
                 <property name="label" translatable="yes">The &lt;b&gt;Settings&lt;/b&gt; screen is where you can change
-items such as your callsign for the live map.</property>
+items such as your callsign for the live map</property>
                 <property name="use_markup">True</property>
-                <property name="justify">center</property>
+                <property name="justify">right</property>
               </object>
               <packing>
                 <property name="left_attach">0</property>
@@ -637,6 +649,38 @@ items such as your callsign for the live map.</property>
                 <property name="position">7</property>
               </packing>
             </child>
+            <child>
+              <object class="GtkLabel" id="label10">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">center</property>
+                <property name="valign">end</property>
+                <property name="label" translatable="yes">Maximum Altitude:</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">8</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblHABMaxAltitude">
+                <property name="width_request">200</property>
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">start</property>
+                <property name="margin_top">4</property>
+                <attributes>
+                  <attribute name="font-desc" value="DejaVu Sans Mono Bold 24"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">9</property>
+              </packing>
+            </child>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -894,6 +938,36 @@ items such as your callsign for the live map.</property>
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">9</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="label34">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="halign">center</property>
+                <property name="margin_top">6</property>
+                <property name="label" translatable="yes">Time since position:</property>
+                <property name="single_line_mode">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">10</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="lblHABTimeSince">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="valign">start</property>
+                <attributes>
+                  <attribute name="font-desc" value="DejaVu Sans Mono Bold 24"/>
+                </attributes>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">11</property>
               </packing>
             </child>
           </object>
