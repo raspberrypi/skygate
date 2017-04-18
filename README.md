@@ -10,11 +10,9 @@ This software is written for Python 3.4.
 
 It needs these install items:
 
-
     sudo apt-get install wmctrl
 
 And this Python library:
-
 
     sudo pip3 install psutil
 
@@ -42,7 +40,7 @@ RTTY is decoded external using dl-fldigi, with the audio feed by pulseaudio.  To
 
 Then edit the following file with nano/vi/whatever, e.g.:
 
-	nano src/Makefile.am**
+	nano src/Makefile.am
 
 **You have to comment-out TESTS line (add "#" at the start)**
 

@@ -1,0 +1,5 @@
+sudo sed -i '@\/home\/pi\/skygate\/gateway\/start_gateway.sh/d' ~/.config/lxsession/LXDE-pi/autostart
+sudo sed -i '@\/home\/pi\/skygate\/gateway\/start_rtty.sh/d' ~/.config/lxsession/LXDE-pi/autostart
+
+sudo echo "@/home/pi/skygate/gateway/start_gateway.sh" >> ~/.config/lxsession/LXDE-pi/autostart
+sudo echo "@/home/pi/skygate/gateway/start_rtty.sh" >> ~/.config/lxsession/LXDE-pi/autostart
