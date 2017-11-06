@@ -21,7 +21,7 @@ class RTTYScreen(object):
 											 '		and in dl-fldigi (using the button below), check the following:',
 											 '',
 											 '			-	that the the thin red cursor lines align with the yellow/red signal',
-											 '			-	that the baud rate (50/300) and databits (7/50) matches the tracker',
+											 '			-	that the baud rate (50/300) and databits (7/8) match the tracker',
 											 ''],
 											 '', 18)
 											 

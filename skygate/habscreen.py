@@ -76,7 +76,7 @@ class HABScreen(object):
 		HABPosition = self.LatestHABValues()
 		if HABPosition:
 			self.lblHABPayload.set_text(HABPosition['payload'])
-			self.lblHABRate.set_text("{0:.1f}".format(HABPosition['rate']))
+			self.lblHABRate.set_text("{0:.1f}".format(HABPosition['rate']) + 'm/s')
 			self.lblHABTime.set_text(HABPosition['time'].strftime('%H:%M:%S'))
 			self.lblHABLatitude.set_text("{0:.5f}".format(HABPosition['lat']))
 			self.lblHABLongitude.set_text("{0:.5f}".format(HABPosition['lon']))

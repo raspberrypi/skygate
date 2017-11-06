@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.20.0 -->
 <interface>
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkOffscreenWindow" id="windowDefault">
@@ -846,7 +846,7 @@ items such as your callsign for the live map</property>
                 <property name="can_focus">False</property>
                 <property name="halign">center</property>
                 <property name="margin_top">6</property>
-                <property name="label" translatable="yes">Vertical Rate (m/s):</property>
+                <property name="label" translatable="yes">Vertical Rate:</property>
                 <property name="single_line_mode">True</property>
               </object>
               <packing>
@@ -2157,7 +2157,7 @@ items such as your callsign for the live map</property>
                 </child>
                 <child>
                   <object class="GtkButton" id="button32">
-                    <property name="label" translatable="yes">_</property>
+                    <property name="label" translatable="yes">.</property>
                     <property name="visible">True</property>
                     <property name="can_focus">True</property>
                     <property name="receives_default">True</property>
