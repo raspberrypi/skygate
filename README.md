@@ -56,7 +56,7 @@ Start dl-fldigi with
 
 	./src/dl-fldigi --wfall-only
 
-At startup, enter your receiver callsign.  Then, on the audio config page, select Pulse Audio
+At startup, enter your receiver callsign.  Then, on the audio config page, select Port Audio and the first device.
 
 Then configure dl-fldigi through its menus (these settings suit pytrack and Pi In The Sky default settings):
 
