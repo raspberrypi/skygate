@@ -49,7 +49,7 @@ Set up the loopback audio device, with
 
 Start the RTL SDR software with
 
-	rtl_fm -M usb -f 434.100M -s 192000 -r 8000 - | aplay -f S16_LE -t raw -c 1 -D loopout
+	rtl_fm -M usb -f 434.100M -s 192000 -r 8000 - | aplay -f S16_LE -t raw -c 1
 
 
 Start dl-fldigi with

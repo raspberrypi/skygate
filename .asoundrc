@@ -30,7 +30,7 @@ pcm.!default {
 
 pcm.output {
 	type hw
-	card "0"
+	card 0
 }
 
 pcm.loopin {

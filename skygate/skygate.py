@@ -238,7 +238,7 @@ class SkyGate:
 		return False	# So we don't get called again, until there's a new GPS position
 	
 	def PositionDlFldigi(self):
-		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(self.windowMain.get_position()[0]+46) + ',' + str(self.windowMain.get_position()[1]+150) + ',700,173')
+		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -e 0,' + str(self.windowMain.get_position()[0]+0) + ',' + str(self.windowMain.get_position()[1]+150) + ',700,173')
 
 	def ShowDlFldigi(self, Show):
 		os.system('wmctrl -r "dl-fldigi - waterfall-only mode" -b add,' + ('above' if Show else 'below'))
