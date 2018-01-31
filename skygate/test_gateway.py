@@ -1,4 +1,4 @@
-from gateway import *
+from skygate.gateway import *
 import time
 
 print("Creating gateway object ...")

@@ -1,5 +1,5 @@
 import gi
-from misc import *
+from skygate.misc import *
 from datetime import datetime
 
 class HABScreen(object):

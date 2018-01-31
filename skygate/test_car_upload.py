@@ -1,5 +1,5 @@
-from gps import *
-from habitat import *
+from skygate.gps import *
+from skygate.habitat import *
 import time
 
 print("Creating GPS object ...")

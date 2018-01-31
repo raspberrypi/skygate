@@ -9,6 +9,18 @@ setup(
     author='Dave Akerman',
     author_email='dave@sccs.co.uk',
     description='HAB Receiver for RTTY and LoRa',
-    # install_requires=['']
+    scripts=[
+        'skygate/skygate',
+        'skygate/skygate_rtty',
+        'skygate/toggle_skygate'
+    ],
+    install_requires=[
+        'pygobject',
+        'gpiozero',
+        'setuptools',
+        'pyserial',
+        'spidev',
+    ],
+    include_package_data=True,
 )
 

@@ -1,4 +1,4 @@
-from misc import *
+from skygate.misc import *
 
 class GPSScreen(object):
 	

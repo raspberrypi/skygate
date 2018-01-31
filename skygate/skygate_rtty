@@ -1,0 +1,42 @@
+#!/bin/sh
+
+cleanup()
+{
+    if [ ! -d "$TMP_DIR" ]; then
+      return
+    fi
+    jobs -p > "${TMP_DIR}/jobs"
+    xargs kill < "${TMP_DIR}/jobs" 2> /dev/null
+    if [ -f "${TMP_DIR}/.asoundrc.bak" ]; then
+        mv "${TMP_DIR}/.asoundrc.bak" "${HOME}/.asoundrc"
+    else
+        rm "${HOME}/.asoundrc"
+    fi
+    rm -rf "$TMP_DIR"
+    wait
+}
+
+CARD_ID="$(aplay -l | sed -n  '0,/card \([[:digit:]]*\): ALSA \[bcm2835 ALSA\].*/s//\1/p')"
+if [ -z "$CARD_ID" ]; then
+    echo "Could not determine sound card ID"
+    exit 1
+fi
+
+TMP_DIR="$(mktemp -d)"
+if [ -f "${HOME}/.asoundrc" ]; then
+    cp "${HOME}/.asoundrc" "${TMP_DIR}/.asoundrc.bak"
+fi
+trap cleanup 0 1 2 3 6
+sed "s/CARD_ID/$CARD_ID/" "/usr/share/skygate/asoundrc.loopback" > "${HOME}/.asoundrc"
+
+rtl_fm -M usb -f 434.100M -s 192000 -r 8000 - | aplay -f S16_LE -t raw -c 1 &
+APLAY_PID="$!"
+
+sleep 1
+if ! ps -p "$APLAY_PID" > /dev/null; then
+    echo "Could not start rtl_fm"
+elif [ "$(pgrep -x -c skygate_rtty 2> /dev/null)" != 1 ]; then
+    echo "Skygate already running"
+else
+    dl-fldigi --wfall-only
+fi

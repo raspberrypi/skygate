@@ -1,0 +1,31 @@
+#!/bin/sh
+
+AUTOSTART_DIR="$HOME/.config/autostart"
+SG_RTTY_FILE="$AUTOSTART_DIR/skygate_rtty.desktop"
+SG_FILE="$AUTOSTART_DIR/skygate.desktop"
+
+create_autostart_file()
+{
+  CMD="$1"
+  cat > "$AUTOSTART_DIR/$CMD.desktop" << EOF
+[Desktop Entry]
+Type=Application
+Exec=$CMD
+EOF
+}
+
+if [ "$(id -u)" -eq 0 ]; then
+  echo "$0 should not run as root"
+  exit 1
+fi
+
+if [ -f "$SG_RTTY_FILE" ] && [ -f "$SG_FILE" ]; then
+  rm -f "$SG_RTTY_FILE" "$SG_FILE"
+  echo "Skygate autostart disabled"
+else
+  mkdir -p "$AUTOSTART_DIR"
+  for cmd in skygate skygate_rtty; do
+    create_autostart_file "$cmd"
+  done
+  echo "Skygate autostart enabled"
+fi

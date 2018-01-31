@@ -1,4 +1,4 @@
-from gps import *
+from skygate.gps import *
 import time
 
 print("Creating GPS object ...")

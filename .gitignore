@@ -1,15 +1,1 @@
-*.jpg
-*.bin
-*.o
-*.glade~
-gps/gps
-__pycache__
-images
-*.pyc
-*.ini
-
-build/
-dist/
-*.egg-info/
-*.egg
-
+skygate.egg-info

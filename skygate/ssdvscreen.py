@@ -1,5 +1,5 @@
 import os, time, glob
-from misc import *
+from skygate.misc import *
 from gi.repository import Gtk, GObject, Pango, GdkPixbuf
 
 class SSDVScreen(object):

@@ -1,4 +1,4 @@
-from lora import *
+from skygate.lora import *
 import time
 
 def woo_got_a_packet(packet):

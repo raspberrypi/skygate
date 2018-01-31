@@ -3,13 +3,14 @@
 import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, GObject, Pango, Gdk, GLib, GdkPixbuf
-import misc
-from gateway import *
-from habscreen import *
-from lorascreen import *
-from rttyscreen import *
-from gpsscreen import *
-from ssdvscreen import *
+from pkg_resources import resource_filename
+import skygate.misc
+from skygate.gateway import *
+from skygate.habscreen import *
+from skygate.lorascreen import *
+from skygate.rttyscreen import *
+from skygate.gpsscreen import *
+from skygate.ssdvscreen import *
 import configparser
 import datetime
 import string
@@ -29,9 +30,12 @@ class SkyGate:
 		self.LoRaFrequencyError = 0
 		self.CurrentGPSPosition = None
 		self.SettingsEditBox = None
+
+		self.GladeFile=resource_filename('skygate',
+			'skygate.glade')
 		
 		self.builder = Gtk.Builder()
-		self.builder.add_from_file("skygate.glade")
+		self.builder.add_from_file(self.GladeFile)
 		self.builder.connect_signals(self)
 
 		self.windowMain = self.builder.get_object("windowMain")

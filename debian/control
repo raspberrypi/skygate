@@ -1,0 +1,15 @@
+Source: skygate
+Section: hamradio
+Priority: optional
+Maintainer: Serge Schneider <serge@raspberrypi.org>
+Build-Depends: debhelper (>= 9), dh-python, python3-all, python3-setuptools
+Standards-Version: 3.9.8
+Homepage: http://github.com/raspberrypi/skygate
+X-Python3-Version: >= 3.2
+
+Package: python3-skygate
+Architecture: all
+Depends: ${python3:Depends}, ${misc:Depends}, wmctrl, rtl-sdr, dl-fldigi, ssdv
+Description: HAB Receiver for RTTY and LoRa (Python 3)
+ .
+ This package installs the library for Python 3.

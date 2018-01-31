@@ -1,8 +1,8 @@
-from gps import *
-from lora import *
-from rtty import *
-from habitat import *
-from ssdv import *
+from skygate.gps import *
+from skygate.lora import *
+from skygate.rtty import *
+from skygate.habitat import *
+from skygate.ssdv import *
 from time import sleep
 
 class gateway(object):

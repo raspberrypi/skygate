@@ -1,0 +1,3 @@
+debian/modprobe.d/skygate.conf /lib/modprobe.d
+debian/modules-load.d/skygate.conf /usr/lib/modules-load.d
+debian/asoundrc.loopback /usr/share/skygate

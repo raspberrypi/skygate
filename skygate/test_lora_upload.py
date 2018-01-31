@@ -1,4 +1,4 @@
-from lora import *
+from skygate.lora import *
 from habitat import *
 import time
 
