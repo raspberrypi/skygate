@@ -1,3 +1,10 @@
+skygate (0.2) stretch; urgency=medium
+
+  * Add alsa-utils dependency
+  * Delete skygate/lcars.py
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 01 Feb 2018 13:38:16 +0000
+
 skygate (0.1) stretch; urgency=medium
 
   * Initial Release.

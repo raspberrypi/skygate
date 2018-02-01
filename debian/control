@@ -9,7 +9,8 @@ X-Python3-Version: >= 3.2
 
 Package: python3-skygate
 Architecture: all
-Depends: ${python3:Depends}, ${misc:Depends}, wmctrl, rtl-sdr, dl-fldigi, ssdv
+Depends: ${python3:Depends}, ${misc:Depends}, wmctrl, rtl-sdr, dl-fldigi, ssdv,
+ alsa-utils
 Description: HAB Receiver for RTTY and LoRa (Python 3)
  .
  This package installs the library for Python 3.
