@@ -90,7 +90,7 @@ class SkyGate:
 		self.PositionDlFldigi()
 		
 		# Read config file
-		self.ConfigFileName = 'skygate.ini'
+		self.ConfigFileName = os.path.join(os.environ['HOME'], '.config/skygate.ini')
 		self.LoadSettingsFromFile(self.ConfigFileName)
 		
 		# Show current settings
