@@ -1,3 +1,9 @@
+skygate (0.3) stretch; urgency=medium
+
+  * Add gir1.2-gtk-3.0 dependency
+
+ -- Serge Schneider <serge@raspberrypi.org>  Thu, 09 Aug 2018 10:30:34 +0100
+
 skygate (0.2) stretch; urgency=medium
 
   * Add alsa-utils dependency
